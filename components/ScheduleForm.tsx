@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Save, Upload, Info, Loader2, MapPin, Building } from "lucide-react";
-import { api } from "../api";
+import { X, Info, MapPin, Building } from "lucide-react";
 import { WorkSchedule, User } from "../types";
 import { Dropdown, Calendar, InputText, Button } from "@/components/prime";
 import { Toast } from "primereact/toast";
-
+import { users } from "../constants";
 interface ScheduleFormProps {
   initialData?: WorkSchedule;
   onClose: () => void;
@@ -12,15 +11,12 @@ interface ScheduleFormProps {
     schedule: Omit<WorkSchedule, "id" | "status" | "createdAt" | "updatedAt">,
   ) => Promise<void>;
 }
-
-type Priority = "NORMAL" | "IMPORTANT" | "LOW";
-
+type Priority = "NORMAL" | "IMPORTANT" | "URGENT";
 const priorityOptions: { label: string; value: Priority }[] = [
   { label: "Bình thường", value: "NORMAL" },
   { label: "Quan trọng", value: "IMPORTANT" },
-  { label: "Thấp", value: "LOW" },
+  { label: "Khẩn cấp", value: "URGENT" },
 ];
-
 const ScheduleForm: React.FC<ScheduleFormProps> = ({
   initialData,
   onClose,
@@ -38,38 +34,16 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
     coordinating_unit: "",
     priority: "NORMAL",
     attendee_ids: [],
-    attachments: [],
     leader: "",
   });
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<any>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const toast = useRef<Toast>(null);
-
   const presiderOptions =
     users?.map((user) => ({
       label: user.full_name,
       value: user.id,
     })) || [];
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const fetchedUsers = await api.getUsers();
-        setUsers(fetchedUsers.data || []);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-        toast.current?.show({
-          severity: "error",
-          summary: "Lỗi",
-          detail: "Không thể tải danh sách người dùng.",
-          life: 3000,
-        });
-      }
-    };
-    fetchUsers();
-  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -86,7 +60,6 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
         coordinating_unit: initialData.coordinating_unit || "",
         priority: initialData.priority || "NORMAL",
         attendee_ids: initialData.attendee_ids || [],
-        attachments: initialData.attachments || [],
       });
     } else {
       setFormData({
@@ -100,14 +73,12 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
         coordinating_unit: "",
         priority: "NORMAL",
         attendee_ids: [],
-        attachments: [],
       });
     }
   }, [initialData]);
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -116,71 +87,23 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
           : value,
     }));
   };
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploading(true);
-    try {
-      const uploadPromises = Array.from(files).map(async (file: any) => {
-        const uploadedData = await api.upload(file);
-        return { name: file.name, url: uploadedData.url };
-      });
-      const newAttachments = await Promise.all(uploadPromises);
-
-      setFormData((prev) => ({
-        ...prev,
-        attachments: [...(prev.attachments || []), ...newAttachments],
-      }));
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Tệp đã được tải lên thành công!",
-        life: 3000,
-      });
-    } catch (err: any) {
-      console.error("Upload error:", err);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: `Lỗi tải tệp: ${err.message}`,
-        life: 3000,
-      });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleRemoveAttachment = (urlToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      attachments: (prev.attachments || []).filter(
-        (att) => att.url !== urlToRemove,
-      ),
-    }));
-  };
 
   const validate = () => {
     const newErrors: any = {};
     if (!formData.title.trim()) newErrors.title = "Tiêu đề không được để trống";
     if (!formData.start_time)
       newErrors.start_time = "Thời gian bắt đầu không được để trống";
-    if (!formData.end_time)
-      newErrors.end_time = "Thời gian kết thúc không được để trống";
     if (!formData.location.trim())
       newErrors.location = "Địa điểm không được để trống";
     if (formData.presider_id === 0)
-      newErrors.presider_id = "Vui lòng chọn người tham gia";
+      newErrors.presider_id = "Vui lòng chọn cán bộ";
+    if (
+      formData.start_time &&
+      formData.end_time &&
+      new Date(formData.start_time) >= new Date(formData.end_time)
+    )
+      newErrors.end_time = "Thời gian kết thúc phải sau thời gian bắt đầu";
 
-    if (formData.start_time && formData.end_time) {
-      const startDateTime = new Date(formData.start_time);
-      const endDateTime = new Date(formData.end_time);
-      if (startDateTime >= endDateTime)
-        newErrors.end_time = "Thời gian kết thúc phải sau thời gian bắt đầu";
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -196,22 +119,15 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
       });
       return;
     }
-    if (uploading) {
-      toast.current?.show({
-        severity: "info",
-        summary: "Thông báo",
-        detail: "Đang tải tệp lên, vui lòng đợi.",
-        life: 3000,
-      });
-      return;
-    }
 
     setLoading(true);
     try {
       const scheduleToSave = {
         ...formData,
         start_time: new Date(formData.start_time).toISOString(),
-        end_time: new Date(formData.end_time).toISOString(),
+        end_time: formData.end_time
+          ? new Date(formData.end_time).toISOString()
+          : null,
       };
       await onSave(scheduleToSave);
       toast.current?.show({
@@ -323,7 +239,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 showTime
                 hourFormat="12"
                 showIcon
-                className="w-full"
+                className="w-full border border-gray-200 rounded-lg"
                 inputClassName={`p-3 bg-gray-50 text-gray-800 text-sm ${
                   errors.start_time ? "p-invalid" : ""
                 }`}
@@ -337,7 +253,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                Thời gian kết thúc <span className="text-red-500">*</span>
+                Thời gian kết thúc
               </label>
               <Calendar
                 name="end_time"
@@ -354,7 +270,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 hideOnDateTimeSelect
                 hourFormat="12"
                 showIcon
-                className="w-full"
+                className="w-full border border-gray-200 rounded-lg"
                 inputClassName={`p-3 bg-gray-50 text-gray-800 text-sm ${
                   errors.start_time ? "p-invalid" : ""
                 }`}
@@ -397,7 +313,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                Đơn vị điều phối
+                Đơn vị chỉ đạo
               </label>
               <div className="relative">
                 <Building
@@ -464,65 +380,13 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
               </div>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-              Tệp đính kèm
-            </label>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                loading={uploading}
-                label="TẢI TỆP LÊN"
-                icon={<Upload size={16} />}
-                outlined
-                className="flex-1 !border-primary-600 !text-primary-600 font-bold text-xs"
-              />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                className="hidden"
-                multiple
-              />
-            </div>
-            {formData.attachments && formData.attachments.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-bold text-gray-500">
-                  Tệp đính kèm đã tải lên:
-                </p>
-                {formData.attachments.map((att, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-gray-100 rounded-lg"
-                  >
-                    <a
-                      href={att.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      {att.name}
-                    </a>
-                    <Button
-                      icon={<X size={16} />}
-                      text
-                      rounded
-                      severity="danger"
-                      onClick={() => handleRemoveAttachment(att.url)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </form>
 
         <div className="p-4 border-t border-gray-100 flex gap-3 bg-gray-50 shrink-0">
           <Button
             type="submit"
             form="schedule-form"
-            loading={loading || uploading}
+            loading={loading}
             className="flex-1 !bg-primary-600 hover:!bg-primary-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-primary-100"
             label={initialData ? "CẬP NHẬT LỊCH TRÌNH" : "TẠO LỊCH TRÌNH"}
           />

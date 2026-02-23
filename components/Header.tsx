@@ -97,8 +97,7 @@ const Header = () => {
           </div>
         </div>
       </div>
-
-      {/* ... rest of the component is unchanged ... */}
+ 
       <div className="bg-white py-6 md:py-8 shadow-sm relative z-20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -110,7 +109,7 @@ const Header = () => {
               />
               <div className="flex flex-col">
                 <h2 className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest hidden md:block">
-                  CỔNG THÔNG TIN ĐIỆN TỬ Y TẾ CỘNG ĐỒNG
+                  TRANG THÔNG TIN ĐIỆN TỬ CHUYÊN NGÀNH Y TẾ
                 </h2>
                 <h1 className="text-xl md:text-3xl font-black text-[#d32f2f] uppercase leading-none py-1 group-hover:text-red-700 transition-colors">
                   SỨC KHỎE THỦ ĐÔ

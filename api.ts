@@ -1,4 +1,3 @@
-
 // const BASE_URL = 'https://160.30.252.5:7002/api';
 // const BASE_URL = 'https://localhost:7002/api';
 const BASE_URL = 'https://suckhoethudo.vn:7005/api';

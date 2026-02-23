@@ -1,3 +1,5 @@
+import { MenuItem, NewsItem, User } from "./types";
+
 import {
   Newspaper,
   AlertTriangle,
@@ -18,9 +20,15 @@ import {
   Syringe,
   CalendarDays,
   Search,
-
 } from "lucide-react";
-import { MenuItem, NewsItem } from "./types";
+
+export const users: Omit<User, "role">[] = [
+  { full_name: "TS.BS Nguyễn Trọng Diện – Giám đốc", id: 1 },
+  { full_name: "TS. Nguyễn Đình Hưng – Phó Giám đốc", id: 2 },
+  { full_name: "TS. Trần Văn Chung – Phó Giám đốc", id: 3 },
+  { full_name: "TS. Ông Vũ Cao Cương – Phó Giám đốc", id: 4 },
+  { full_name: "Đ/c Đinh Hồng Phong  – Phó Giám đốc", id: 5 },
+];
 
 export const SERVICE_CATEGORIES = [
   {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import AdminLayout from "../components/AdminLayout";
 import { useSchedules } from "../services/useSchedules";
-import { WorkSchedule, User } from "../types";
+import { WorkSchedule } from "../types";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -17,9 +17,17 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import ScheduleForm from "../components/ScheduleForm";
-import { api } from "../api";
-import { Dropdown, Button, Toast } from "@/components/prime";
+import { Dropdown, Button, Toast, InputText } from "@/components/prime";
+import { users } from "../constants";
 import { confirmDialog } from "primereact/confirmdialog";
+
+const userMap = users.reduce(
+  (acc, user) => {
+    acc[user.id] = user.full_name;
+    return acc;
+  },
+  {} as Record<number, string>,
+);
 
 const AdminWorkSchedule: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -30,9 +38,7 @@ const AdminWorkSchedule: React.FC = () => {
   const [editingSchedule, setEditingSchedule] = useState<
     WorkSchedule | undefined
   >(undefined);
-  const [users, setUsers] = useState<User[]>([]);
   const toast = useRef<Toast>(null);
-
   const {
     schedules,
     loading,
@@ -41,37 +47,12 @@ const AdminWorkSchedule: React.FC = () => {
     updateSchedule,
     deleteSchedule,
   } = useSchedules();
-
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const fetchedUsers = await api.getUsers();
-        // console.log(fetchedUsers);return
-
-        setUsers(fetchedUsers.data || []);
-      } catch (err) {
-        console.error("Failed to fetch users:", err);
-      }
-    };
-    loadUsers();
-  }, []);
-
   useEffect(() => {
     fetchSchedules({
       status: filterStatus === "all" ? undefined : filterStatus,
       searchTerm: searchTerm,
     });
   }, [fetchSchedules, filterStatus, searchTerm]);
-
-  const userMap = useMemo(() => {
-    return users.reduce(
-      (acc, user) => {
-        acc[user.id] = user.full_name;
-        return acc;
-      },
-      {} as Record<number, string>,
-    );
-  }, [users]);
 
   const handleOpenForm = (schedule?: WorkSchedule) => {
     setEditingSchedule(schedule);
@@ -210,17 +191,16 @@ const AdminWorkSchedule: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 flex-wrap gap-4">
+        <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 flex-wrap gap-4">
           <div className="relative w-full md:w-96">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
             />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tiêu đề, địa điểm..."
+            <InputText
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm theo tiêu đề, địa điểm..."
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-100 font-medium text-sm"
             />
           </div>
@@ -238,12 +218,12 @@ const AdminWorkSchedule: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-gray-50 text-left text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                <th className="px-6 py-4">Lịch trình</th>
-                <th className="px-6 py-4">Thời gian & Địa điểm</th>
-                <th className="px-6 py-4">Cán bộ</th>
-                <th className="px-6 py-4 text-center">Mức độ</th>
-                <th className="px-6 py-4 text-center">Thao tác</th>
+              <tr className="bg-gray-50 h-[3rem] text-left text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                <th className="p-2 ">Lịch trình</th>
+                <th className="p-2">Thời gian & Địa điểm</th>
+                <th className="p-2">Cán bộ</th>
+                <th className="p-2 text-center">Mức độ</th>
+                <th className="p-2 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -266,7 +246,7 @@ const AdminWorkSchedule: React.FC = () => {
                     key={schedule.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 max-w-xs">
+                    <td className="px-4 max-w-xs">
                       <p className="font-bold text-gray-800 text-sm truncate">
                         {schedule.title}
                       </p>
@@ -274,7 +254,7 @@ const AdminWorkSchedule: React.FC = () => {
                         {schedule.content}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="p-2 text-sm text-gray-700">
                       <div className="font-medium">
                         {format(
                           new Date(schedule.start_time),
@@ -292,14 +272,14 @@ const AdminWorkSchedule: React.FC = () => {
                         <MapPin size={12} /> {schedule.location}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="p-2 text-sm text-gray-700">
                       <div className="flex items-center gap-2">
                         <UserIcon size={14} className="text-gray-400" />
-                        {userMap[schedule.presider_id] || "N/A"}
+                        {userMap[schedule.presider_id]}
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-center">
+                    <td className="p-2 text-center">
                       <span
                         className={`py-1 px-3 rounded-full text-xs font-bold ${
                           schedule.priority === "NORMAL"
@@ -313,25 +293,25 @@ const AdminWorkSchedule: React.FC = () => {
                           ? "Bình thường"
                           : schedule.priority === "IMPORTANT"
                             ? "Quan trọng"
-                            : "Thấp"}
+                            : "Khẩn cấp"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          icon={<Edit3 size={18} />}
-                          text
-                          rounded
-                          onClick={() => handleOpenForm(schedule)}
-                        />
-                        <Button
-                          icon={<Trash2 size={18} />}
-                          text
-                          rounded
-                          severity="danger"
-                          onClick={() => handleDeleteSchedule(schedule.id)}
-                        />
-                      </div>
+                    <td className="p-2 text-center">
+                      {/* <div className="flex items-center justify-center"> */}
+                      <Button
+                        icon={<Edit3 size={18} />}
+                        text
+                        rounded
+                        onClick={() => handleOpenForm(schedule)}
+                      />
+                      <Button
+                        icon={<Trash2 size={18} />}
+                        text
+                        rounded
+                        severity="danger"
+                        onClick={() => handleDeleteSchedule(schedule.id)}
+                      />
+                      {/* </div> */}
                     </td>
                   </tr>
                 ))
