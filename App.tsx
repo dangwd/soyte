@@ -20,15 +20,17 @@ import AdminRoute from "./components/AdminRoute";
 import { useAuth } from "./AuthContext";
 import { Toast } from "@/components/prime";
 import { useRef } from "react";
+import { ConfirmDialog } from "primereact/confirmdialog";
 const App = () => {
   const { loading } = useAuth();
   const toast = useRef(null);
   window.$toast = toast;
-  
+
   if (loading) {
     return (
       <>
         <Toast ref={toast} />
+        <ConfirmDialog />
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
           <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">

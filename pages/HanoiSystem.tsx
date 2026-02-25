@@ -13,10 +13,13 @@ import {
   Building,
   Home as HomeIcon,
   ChevronLeft,
+  Ambulance,
+  Hospital,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/prime";
+import { ALL_FACILITIES } from "@/constants";
 
 // Fix for default Leaflet icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -39,6 +42,8 @@ const createCustomIcon = (type: string, isSelected: boolean = false) => {
   if (type === "TT") colorClass = "bg-blue-600";
   if (type === "BT") colorClass = "bg-emerald-600";
   if (type === "PB") colorClass = "bg-violet-600";
+  if (type === "CC") colorClass = "bg-amber-600";
+  if (type === "TYT") colorClass = "bg-cyan-600";
 
   const size = isSelected ? "w-10 h-10" : "w-7 h-7";
   const ring = isSelected
@@ -53,131 +58,31 @@ const createCustomIcon = (type: string, isSelected: boolean = false) => {
               isSelected ? "animate-ping" : ""
             }"></div>
            </div>`,
-    iconSize: isSelected ? [40, 40] : [28, 28],
-    iconAnchor: isSelected ? [20, 20] : [14, 14],
+    // iconSize: [20, 20],
+    // iconAnchor: [10, 10],
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41], // [Nửa chiều rộng, Toàn bộ chiều cao] -> Trỏ đúng điểm nhọn
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
   });
 };
 
 interface Facility {
   id: string;
   name: string;
-  type: "BV" | "TT" | "BT" | "PB";
+  type: "BV" | "TT" | "BT" | "PB" | "CC" | "TYT";
   address: string;
   phone: string;
   coords: [number, number];
   description: string;
   category: string;
 }
-
-const ALL_FACILITIES: Facility[] = [
-  ...[
-    { name: "Văn phòng Sở", id: "pb-1" },
-    { name: "Phòng Tổ chức cán bộ", id: "pb-2" },
-    { name: "Phòng Kế hoạch – Tài chính", id: "pb-3" },
-    { name: "Phòng Nghiệp vụ Y", id: "pb-4" },
-    { name: "Phòng Nghiệp vụ Dược", id: "pb-5" },
-    { name: "Phòng Quản lý BHYT và CNTT", id: "pb-6" },
-    { name: "Phòng Bảo trợ xã hội", id: "pb-7" },
-    { name: "Phòng Kiểm tra lĩnh vực y tế", id: "pb-8" },
-    { name: "Chi cục An toàn vệ sinh thực phẩm", id: "cc-1" },
-    { name: "Chi cục Dân số, Trẻ em và PC tệ nạn xã hội", id: "cc-2" },
-  ].map((item, i) => ({
-    id: item.id,
-    name: item.name,
-    type: "PB" as const,
-    category: i < 8 ? "Phòng ban thuộc Sở" : "Chi cục thuộc Sở",
-    address: "Số 04 Sơn Tây,  Ba Đình, Hà Nội",
-    phone: "024 3998 5765",
-    coords: [21.0312 + i * 0.00005, 105.8315 + i * 0.00005] as [number, number],
-    description:
-      "Cơ quan tham mưu, giúp việc cho Giám đốc Sở trong công tác quản lý nhà nước về y tế trên địa bàn Thủ đô.",
-  })),
-  {
-    id: "bv-1",
-    name: "Bệnh viện đa khoa Xanh Pôn",
-    type: "BV",
-    category: "Bệnh viện",
-    address: "Số 12 Chu Văn An,  Ba Đình, Hà Nội",
-    phone: "024 3823 3075",
-    coords: [21.0318, 105.8396],
-    description:
-      "Bệnh viện đa khoa đầu ngành Ngoại khoa và Nhi khoa của Thủ đô.",
-  },
-  {
-    id: "bv-2",
-    name: "Bệnh viện Thanh Nhàn",
-    type: "BV",
-    category: "Bệnh viện",
-    address: "Số 42 Thanh Nhàn,  Hai Bà Trưng, Hà Nội",
-    phone: "024 3971 4363",
-    coords: [21.0028, 105.8569],
-    description:
-      "Bệnh viện đa khoa hạng I, mũi nhọn về Nội khoa và hồi sức cấp cứu.",
-  },
-  {
-    id: "bv-3",
-    name: "Bệnh viện đa khoa Đức Giang",
-    type: "BV",
-    category: "Bệnh viện",
-    address: "Số 54 Trường Lâm,  Long Biên, Hà Nội",
-    phone: "024 3827 1515",
-    coords: [21.0528, 105.8969],
-    description: "Cơ sở y tế hạng I khu vực phía Đông thành phố.",
-  },
-  {
-    id: "bv-h1",
-    name: "Bệnh viện đa khoa Ba Vì",
-    type: "BV",
-    category: "Bệnh viện",
-    address: "Thị trấn Tây Đằng, Ba Vì, Hà Nội",
-    phone: "024 3386 3144",
-    coords: [21.2352, 105.4125],
-    description: "Phục vụ khám chữa bệnh cho nhân dân Ba Vì.",
-  },
-  {
-    id: "tt-1",
-    name: "Trung tâm Kiểm soát bệnh tật (CDC) Hà Nội",
-    type: "TT",
-    category: "Trung tâm chuyên khoa",
-    address: "Số 70 Nguyễn Chí Thanh,  Đống Đa, Hà Nội",
-    phone: "024 3834 3520",
-    coords: [21.0225, 105.8085],
-    description: "Đơn vị đầu ngành về y tế dự phòng và kiểm soát dịch bệnh.",
-  },
-  {
-    id: "bt-1",
-    name: "Làng trẻ em SOS Hà Nội",
-    type: "BT",
-    category: "Cơ sở bảo trợ",
-    address: "Số 02 Doãn Kế Thiện,  Cầu Giấy, Hà Nội",
-    phone: "024 3764 4022",
-    coords: [21.0385, 105.7812],
-    description: "Nuôi dưỡng và chăm sóc trẻ em mồ côi, có hoàn cảnh đặc biệt.",
-  },
-];
-
-const callApi = async () => {
-  const url = "http://localhost:7001/syt_han/thongtinbenhvien/get_current";
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errText}`);
-    }
-
-    let data = await response.json(); 
-    console.log(data);
-    
-  } catch (error) {
-    console.error("CALL API ERROR:", error);
-  }
-};
 
 const MapEventHandler = ({ coords }: { coords: [number, number] | null }) => {
   const map = useMap();
@@ -196,11 +101,8 @@ const MapEventHandler = ({ coords }: { coords: [number, number] | null }) => {
 };
 
 const HanoiSystem = () => {
-  useEffect(() => {
-    callApi();
-  }, []);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
-    null
+    null,
   );
   const [filterType, setFilterType] = useState<
     "ALL" | "BV" | "TT" | "BT" | "PB"
@@ -250,6 +152,22 @@ const HanoiSystem = () => {
           border: "border-violet-200",
           label: "Phòng/Chi cục",
           icon: <Building size={14} />,
+        };
+      case "CC":
+        return {
+          color: "text-amber-600",
+          bg: "bg-amber-50",
+          border: "border-amber-200",
+          label: "Cơ sở chuyên môn",
+          icon: <Ambulance size={14} />,
+        };
+      case "TYT":
+        return {
+          color: "text-cyan-600",
+          bg: "bg-cyan-50",
+          border: "border-cyan-200",
+          label: "Trạm Y tế",
+          icon: <Hospital size={14} />,
         };
       default:
         return {
@@ -315,16 +233,17 @@ const HanoiSystem = () => {
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
               {[
                 { id: "ALL", label: "Tất cả" },
-                { id: "PB", label: "Quản lý" },
+                { id: "CC", label: "Chi cục" },
+                { id: "TYT", label: "Trạm Y Tế" },
                 { id: "BV", label: "Bệnh viện" },
-                { id: "TT", label: "TT Chuyên khoa" },
+                { id: "TT", label: "Trung tâm" },
                 { id: "BT", label: "Trợ giúp" },
               ].map((btn) => (
                 <Button
                   key={btn.id}
                   label={btn.label}
                   onClick={() => setFilterType(btn.id as any)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border transition-all whitespace-nowrap
+                  className={`p-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border transition-all whitespace-nowrap
                         ${
                           filterType === btn.id
                             ? "!bg-primary-900 !text-white !border-primary-900 shadow-md"
@@ -341,7 +260,7 @@ const HanoiSystem = () => {
               return (
                 <div
                   key={fac.id}
-                  onClick={() => setSelectedFacility(fac)}
+                  onClick={() => setSelectedFacility(fac as Facility)}
                   className={`p-4 border-b border-gray-50 cursor-pointer hover:bg-primary-50 transition-all flex gap-4 ${
                     selectedFacility?.id === fac.id
                       ? "bg-primary-50 border-l-4 border-l-primary-600"
@@ -397,7 +316,7 @@ const HanoiSystem = () => {
                 position={fac.coords}
                 icon={createCustomIcon(
                   fac.type,
-                  selectedFacility?.id === fac.id
+                  selectedFacility?.id === fac.id,
                 )}
                 eventHandlers={{ click: () => setSelectedFacility(fac) }}
               />
@@ -446,14 +365,16 @@ const HanoiSystem = () => {
                   <Button
                     label="Chỉ đường"
                     icon={<Navigation size={16} />}
-                    className="!bg-primary-700 hover:!bg-primary-800 !text-white"
+                    className="!bg-primary-700 hover:!bg-primary-800 !text-white px-2 py-1"
                   />
                   <Button
                     label="Gọi điện"
                     icon={<Phone size={16} />}
                     outlined
                     className="!border-gray-200 hover:!border-primary-600 !text-gray-700"
-                    onClick={() => window.location.href = `tel:${selectedFacility.phone}`}
+                    onClick={() =>
+                      (window.location.href = `tel:${selectedFacility.phone}`)
+                    }
                   />
                 </div>
               </div>

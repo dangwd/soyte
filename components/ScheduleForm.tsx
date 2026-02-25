@@ -283,12 +283,12 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
               )}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div>
+            <div className="w-full">
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                 Địa điểm <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
+              <div className="w-full relative">
                 <MapPin
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -311,7 +311,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 </p>
               )}
             </div>
-            <div>
+            {/* <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                 Đơn vị chỉ đạo
               </label>
@@ -329,7 +329,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
                   className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 outline-none font-medium text-gray-800"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

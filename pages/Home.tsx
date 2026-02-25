@@ -27,10 +27,11 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const spotlightPost = dbPosts[0];
   const latestTenPosts = dbPosts.slice(1, 11);
+  const tieuDiem = dbPosts.slice(1, 6);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentVideo, setCurrentVideo] = useState(MOCK_VIDEOS[0]);
   const images = [
-    "https://suckhoethudo.vn/assets/anh2-r7WidWql.jpg",
+    // "https://suckhoethudo.vn/assets/anh2-r7WidWql.jpg",
     "https://suckhoethudo.vn/assets/anh1-CFkqSFx4.png",
   ];
   const CategoryColumn = ({
@@ -41,6 +42,14 @@ const Home = () => {
     image,
     data,
     paddingClass = "",
+  }: {
+    title: string;
+    Icon: React.ComponentType<{ className?: string; size?: number }>;
+    iconColor: string;
+    hoverColor: string;
+    image: string;
+    data: any[];
+    paddingClass?: string;
   }) => {
     if (!data || data.length === 0) return null;
     const [first, ...rest] = data;
@@ -146,7 +155,7 @@ const Home = () => {
         const response = await api.post("/posts/by-categories", postData);
         if (response && response.data && Array.isArray(response.data)) {
           const postsByCategory = response.data.reduce(
-            (acc, item) => {
+            (acc: any, item: any) => {
               acc[item.category_id] = item.posts;
               return acc;
             },
@@ -269,28 +278,30 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="relative container p-0  h-[150px] overflow-hidden  mt-2  shadow-xl">
+      <section className="relative container p-0 h-[150px] overflow-hidden  mt-2  shadow-xl">
         <img
           src={images[currentImageIndex]}
           alt="Slide"
           className="object-cover transition-opacity duration-1000 ease-in-out w-full h-full object-fill"
         />
-        <div className=" absolute inset-0 flex items-center justify-between p-4">
-          <Button
-            icon={<ChevronLeft />}
-            onClick={goToPrevious}
-            text
-            rounded
-            className="!bg-black/50 !text-white w-10 h-10 rounded-full hover:!bg-black/75 transition ml-2 flex items-center justify-center"
-          />
-          <Button
-            icon={<ChevronRight />}
-            onClick={goToNext}
-            text
-            rounded
-            className="!bg-black/50 !text-white w-10 h-10 rounded-full hover:!bg-black/75 transition mr-2 flex items-center justify-center"
-          />
-        </div>
+        {images.length > 1 && (
+          <div className=" absolute inset-0 flex items-center justify-between p-4">
+            <Button
+              icon={<ChevronLeft />}
+              onClick={goToPrevious}
+              text
+              rounded
+              className="!bg-black/50 !text-white w-10 h-10 rounded-full hover:!bg-black/75 transition ml-2 flex items-center justify-center"
+            />
+            <Button
+              icon={<ChevronRight />}
+              onClick={goToNext}
+              text
+              rounded
+              className="!bg-black/50 !text-white w-10 h-10 rounded-full hover:!bg-black/75 transition mr-2 flex items-center justify-center"
+            />
+          </div>
+        )}
       </section>
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -447,7 +458,6 @@ const Home = () => {
       <section className="py-8 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-            {/* LEFT COLUMN: TIÊU ĐIỂM (List Style) - 4 Columns (1/3 Width) */}
             <div className="xl:col-span-4">
               <div className="mb-4 border-b-2 border-red-600 pb-1">
                 <h3 className="text-xl font-bold text-red-600 uppercase flex items-center">
@@ -456,8 +466,7 @@ const Home = () => {
               </div>
 
               <div className="flex flex-col gap-5">
-                {/* Items */}
-                {MOCK_NEWS.slice(0, 5).map((news, idx) => (
+                {tieuDiem.map((news, idx) => (
                   <Link
                     key={news.id}
                     to={`/news/detail/${news.id}`}
@@ -465,7 +474,7 @@ const Home = () => {
                   >
                     <div className="w-24 h-16 flex-shrink-0 overflow-hidden rounded bg-gray-200 shadow-sm relative">
                       <img
-                        src={news.image}
+                        src={news.imageUrl}
                         alt={news.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminLayout from "../components/AdminLayout";
 import { useSchedules } from "../services/useSchedules";
 import { WorkSchedule } from "../types";
-import { format } from "date-fns";
+import { format, subHours } from "date-fns";
+
 import { vi } from "date-fns/locale";
 import {
   Search,
@@ -15,19 +16,17 @@ import {
   Clock,
   MapPin,
   User as UserIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import ScheduleForm from "../components/ScheduleForm";
-import { Dropdown, Button, Toast, InputText } from "@/components/prime";
-import { users } from "../constants";
-import { confirmDialog } from "primereact/confirmdialog";
-
-const userMap = users.reduce(
-  (acc, user) => {
-    acc[user.id] = user.full_name;
-    return acc;
-  },
-  {} as Record<number, string>,
-);
+import {
+  Dropdown,
+  Button,
+  Toast,
+  InputText, 
+} from "@/components/prime"; 
+import { confirmDialog } from "primereact/confirmdialog"; 
 
 const AdminWorkSchedule: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -39,20 +38,29 @@ const AdminWorkSchedule: React.FC = () => {
     WorkSchedule | undefined
   >(undefined);
   const toast = useRef<Toast>(null);
+
+  // Pagination states 
+  const [rows, setRows] = useState(10); // Items per page
+  const [page, setPage] = useState(1); // Current page number (1-based)
+
   const {
     schedules,
     loading,
+    totalRecords,
     fetchSchedules,
     createSchedule,
     updateSchedule,
     deleteSchedule,
   } = useSchedules();
+
   useEffect(() => {
     fetchSchedules({
       status: filterStatus === "all" ? undefined : filterStatus,
       searchTerm: searchTerm,
+      page: page,
+      limit: rows,
     });
-  }, [fetchSchedules, filterStatus, searchTerm]);
+  }, [fetchSchedules, filterStatus, searchTerm, page, rows]);
 
   const handleOpenForm = (schedule?: WorkSchedule) => {
     setEditingSchedule(schedule);
@@ -92,6 +100,8 @@ const AdminWorkSchedule: React.FC = () => {
       fetchSchedules({
         status: filterStatus === "all" ? undefined : filterStatus,
         searchTerm: searchTerm,
+        page: page,
+        limit: rows,
       });
     } catch (err: any) {
       toast.current?.show({
@@ -110,8 +120,8 @@ const AdminWorkSchedule: React.FC = () => {
       icon: "pi pi-exclamation-triangle",
       acceptLabel: "Xóa",
       rejectLabel: "Hủy",
-      acceptClassName: "p-button-danger",
-      rejectClassName: "p-button-text",
+      acceptClassName: "p-2 mx-2 border border-red-600 hover:bg-red-700 hover:text-white text-red-600 font-bold  w-[100px]",
+      rejectClassName: "p-2",
       accept: async () => {
         try {
           await deleteSchedule(id);
@@ -123,7 +133,7 @@ const AdminWorkSchedule: React.FC = () => {
           });
           fetchSchedules({
             status: filterStatus === "all" ? undefined : filterStatus,
-            searchTerm: searchTerm,
+            searchTerm: searchTerm, 
           });
         } catch (err: any) {
           toast.current?.show({
@@ -141,43 +151,40 @@ const AdminWorkSchedule: React.FC = () => {
     { label: "Đang chờ", value: "pending" },
     { label: "Hoàn thành", value: "completed" },
     { label: "Hủy bỏ", value: "cancelled" },
-  ];
+  ]; 
 
-  const stats = useMemo(
-    () => ({
-      total: schedules?.length || 0,
-      pending:
-        (schedules.length > 0 &&
-          schedules.filter((s) => s.status === "pending").length) ||
-        0,
-      completed:
-        (schedules.length > 0 &&
-          schedules.filter((s) => s.status === "completed").length) ||
-        0,
-    }),
-    [schedules],
-  );
+  const onPageChange = (page: number) => {
+    setPage(page);
+  };
 
   return (
     <AdminLayout title="Quản lý Lịch công tác">
-      <Toast ref={toast} />
+      <Toast ref={toast} /> 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
         <StatCard
           icon={CalendarDays}
           title="Tổng số lịch trình"
-          value={stats.total}
+          value={totalRecords} // Display totalRecords
           color="blue"
         />
         <StatCard
           icon={Clock}
           title="Đang chờ"
-          value={stats.pending}
+          value={
+            (schedules.length > 0 &&
+              schedules.filter((s) => s.status === "pending").length) ||
+            0
+          }
           color="amber"
         />
         <StatCard
           icon={CheckCircle}
           title="Đã hoàn thành"
-          value={stats.completed}
+          value={
+            (schedules.length > 0 &&
+              schedules.filter((s) => s.status === "completed").length) ||
+            0
+          }
           color="green"
         />
         <div className="flex flex-col justify-center">
@@ -221,7 +228,7 @@ const AdminWorkSchedule: React.FC = () => {
               <tr className="bg-gray-50 h-[3rem] text-left text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
                 <th className="p-2 ">Lịch trình</th>
                 <th className="p-2">Thời gian & Địa điểm</th>
-                <th className="p-2">Cán bộ</th>
+                {/* <th className="p-2">Cán bộ</th> */}
                 <th className="p-2 text-center">Mức độ</th>
                 <th className="p-2 text-center">Thao tác</th>
               </tr>
@@ -257,27 +264,29 @@ const AdminWorkSchedule: React.FC = () => {
                     <td className="p-2 text-sm text-gray-700">
                       <div className="font-medium">
                         {format(
-                          new Date(schedule.start_time),
+                          subHours(new Date(schedule.start_time), 7),
                           "HH:mm, dd/MM/yyyy",
                           { locale: vi },
                         )}{" "}
-                        -{" "}
+                        -
                         {format(
-                          new Date(schedule.end_time),
+                          subHours(new Date(schedule.end_time), 7),
                           "HH:mm, dd/MM/yyyy",
                           { locale: vi },
                         )}
                       </div>
+                      {schedule.location && (
                       <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                         <MapPin size={12} /> {schedule.location}
                       </div>
+                      )}
                     </td>
-                    <td className="p-2 text-sm text-gray-700">
+                    {/* <td className="p-2 text-sm text-gray-700">
                       <div className="flex items-center gap-2">
                         <UserIcon size={14} className="text-gray-400" />
                         {userMap[schedule.presider_id]}
                       </div>
-                    </td>
+                    </td> */}
 
                     <td className="p-2 text-center">
                       <span
@@ -331,6 +340,43 @@ const AdminWorkSchedule: React.FC = () => {
             </div>
           )}
         </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            Hiển thị <span className="font-bold">{schedules.length}</span> trên
+            <span className="font-bold"> {totalRecords}</span> kết quả
+          </div>
+          {totalRecords > 1 && (
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={() => onPageChange(page - 1 <= 1 ? 1 : page - 1)}
+                disabled={page === 1}
+                icon={<ChevronLeft size={16} />}
+                label="Trước"
+                text
+              />
+              <div className="px-3 py-1 text-sm font-bold">
+                {page} / {Math.ceil(totalRecords / rows) || 1}
+              </div>
+              <Button
+                onClick={() =>
+                  onPageChange(
+                    page + 1 >= Math.ceil(totalRecords / rows)
+                      ? Math.ceil(totalRecords / rows)
+                      : page + 1,
+                  )
+                }
+                disabled={
+                  page === Math.ceil(totalRecords / rows) ||
+                  Math.ceil(totalRecords / rows) === 0
+                }
+                icon={<ChevronRight size={16} />}
+                label="Sau"
+                iconPos="right"
+                text
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {isFormOpen && (
@@ -343,6 +389,7 @@ const AdminWorkSchedule: React.FC = () => {
     </AdminLayout>
   );
 };
+
 interface StatCardProps {
   icon: React.ElementType;
   title: string;
@@ -362,6 +409,7 @@ const StatCard: React.FC<StatCardProps> = ({
     amber: "bg-amber-50 text-amber-600",
   };
   return (
+    <>
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all transform hover:-translate-y-1">
       <div
         className={`w-12 h-12 ${colors[color]} rounded-xl flex items-center justify-center`}
@@ -374,7 +422,8 @@ const StatCard: React.FC<StatCardProps> = ({
         </p>
         <h3 className="text-2xl font-black text-gray-800">{value}</h3>
       </div>
-    </div>
+    </div> 
+    </>
   );
 };
 

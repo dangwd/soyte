@@ -6,11 +6,14 @@ interface UseSchedulesResult {
   schedules: WorkSchedule[];
   loading: boolean;
   error: any;
+  totalRecords: number;
   fetchSchedules: (filters?: {
     status?: string;
     searchTerm?: string;
     startDate?: string;
     endDate?: string;
+    page?: number;
+    limit?: number;
   }) => Promise<void>;
   getScheduleById: (id: number) => Promise<WorkSchedule | null>;
   createSchedule: (
@@ -27,13 +30,15 @@ export const useSchedules = (): UseSchedulesResult => {
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
 
   const fetchSchedules = useCallback(async (filters = {}) => {
     setLoading(true);
     setError(null);
     try {
       const data = await api.get("/schedules", filters); 
-      setSchedules(data.data.schedules);
+      setSchedules(data.data.schedules || []);
+      setTotalRecords(data.data.totalItems || 0);
     } catch (err) {
       setError(err);
       console.error("Failed to fetch schedules:", err);
@@ -120,6 +125,7 @@ export const useSchedules = (): UseSchedulesResult => {
     schedules,
     loading,
     error,
+    totalRecords,
     fetchSchedules,
     getScheduleById,
     createSchedule,
