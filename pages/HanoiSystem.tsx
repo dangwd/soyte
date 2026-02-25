@@ -310,7 +310,7 @@ const HanoiSystem = () => {
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapEventHandler coords={selectedFacility?.coords || null} />
-            {filteredFacilities.map((fac) => (
+            {filteredFacilities.map((fac: any) => (
               <Marker
                 key={fac.id}
                 position={fac.coords}
