@@ -1,101 +1,43 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Building2,
-  Activity,
-  HeartPulse,
-  Building,
-  Stethoscope,
-  Home,
-  MapPin,
-  ChevronRight,
-  ShieldCheck,
-  Search,
-  LayoutDashboard,
-} from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Activity, ShieldCheck, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HealthRecords = () => {
   const initialized = useRef(false);
-  const [activeFacility, setActiveFacility] = useState<string | null>(null);
-
-  const facilities = [
-    {
-      id: "xanh-pon",
-      name: "Bệnh viện Đa khoa Xanh Pôn",
-      icon: Building2,
-      color: "text-red-600",
-      bg: "bg-red-50",
-    },
-    {
-      id: "tim-hn",
-      name: "Bệnh viện Tim Hà Nội",
-      icon: HeartPulse,
-      color: "text-rose-600",
-      bg: "bg-rose-50",
-    },
-    {
-      id: "soc-son",
-      name: "Bệnh viện Đa khoa Sóc Sơn",
-      icon: Building,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      id: "da-lieu",
-      name: "Bệnh viện Da liễu Hà Nội",
-      icon: Stethoscope,
-      color: "text-cyan-600",
-      bg: "bg-cyan-50",
-    },
-    {
-      id: "hang-ma",
-      name: "Trạm Y tế  Hàng Mã",
-      icon: Home,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
-      id: "co-loa",
-      name: "Trạm Y tế Xã Cổ Loa",
-      icon: MapPin,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-    },
-  ];
-
+  const win = window as any;
   useEffect(() => {
     if (initialized.current) {
       return;
     }
     initialized.current = true;
 
-    const loadScript = (src: string) => {
+    const config = win.__APP_CONFIG__;
+    const loadScript = () => { 
       return new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(`script[src="${src}"]`);
+        const existingScript = document.querySelector(
+          `script[src="${config.loadScript}"]`,
+        );
         if (existingScript) {
           resolve(true);
           return;
         }
-        const script = document.createElement("script");
-        script.src = src;
+        const script = document.createElement("script"); 
+        script.src = config.loadScript;
         script.onload = resolve;
         script.onerror = reject;
         document.body.appendChild(script);
       });
     };
 
-    loadScript(
-      "https://datahub.hanoi.gov.vn/js/visualcommon/publish-dashboard-drag.js"
-    )
+    loadScript()
       .then(() => {
-        const win = window as any;
         if (win.dashboard) {
           win.dashboard.setUnit("");
           win.dashboard.setUser("");
           win.dashboard.domReady(() => {
             win.dashboard.viewDashboard(
-              "https://datahub.hanoi.gov.vn/databox/ttksbt/tinyroute/1EBC83D81249F5F1.cpx?secrd=zZlJb2VFjTYo0sQ8vu0Tmk2K87v92uRv5VtEQsbYeQHWoRD9KmJ3AiWiHLfkBh1m",
-              "view-design"
+              config.URL_CHART_HEALTHY_RECRORDS,
+              "view-design",
             );
           });
         }
@@ -106,7 +48,7 @@ const HealthRecords = () => {
 
     return () => {
       const scriptElement = document.querySelector(
-        'script[src="https://datahub.hanoi.gov.vn/js/visualcommon/publish-dashboard-drag.js"]'
+        'script[src="https://datahub.hanoi.gov.vn/js/visualcommon/publish-dashboard-drag.js"]',
       );
       if (scriptElement) {
         // We might want to keep it if multiple navigations happen, but cleanup is safer for POC
@@ -140,8 +82,7 @@ const HealthRecords = () => {
         </div>
       </div>
 
-      <div className="w-full px-4">
-        {/* Quick Access Grid - The 6 Requested Buttons */}
+      <div className="w-full px-4"> 
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <Link
@@ -153,16 +94,14 @@ const HealthRecords = () => {
             </Link>
           </div>
         </div>
-
-        {/* Dashboard Frame */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden min-h-[650px] flex flex-col"> 
+  
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden min-h-[650px] flex flex-col">
           <div className="flex-grow relative bg-slate-100">
             <div
               id="view-design"
               className="w-full h-[600px]"
               style={{ height: "600px", width: "100%" }}
-            >
-              {/* Dashboard script loads here */}
+            > 
             </div>
           </div>
         </div>

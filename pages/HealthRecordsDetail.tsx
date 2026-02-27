@@ -14,18 +14,7 @@ import {
 } from "lucide-react";
 
 const HealthRecordsDetail = () => {
-  const initialized = useRef(false);
-  const [activeFacility, setActiveFacility] = useState<string | null>(null);
-
-  const facilities = [
-    { id: "xanh-pon", name: "Bệnh viện Đa khoa Xanh Pôn", icon: Building2, color: "text-red-600", bg: "bg-red-50" },
-    { id: "tim-hn", name: "Bệnh viện Tim Hà Nội", icon: HeartPulse, color: "text-rose-600", bg: "bg-rose-50" },
-    { id: "soc-son", name: "Bệnh viện Đa khoa Sóc Sơn", icon: Building, color: "text-blue-600", bg: "bg-blue-50" },
-    { id: "da-lieu", name: "Bệnh viện Da liễu Hà Nội", icon: Stethoscope, color: "text-cyan-600", bg: "bg-cyan-50" },
-    { id: "hang-ma", name: "Trạm Y tế  Hàng Mã", icon: Home, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { id: "co-loa", name: "Trạm Y tế Xã Cổ Loa", icon: MapPin, color: "text-orange-600", bg: "bg-orange-50" },
-  ];
-
+  const initialized = useRef(false); 
   useEffect(() => {
     if (initialized.current) {
       return;
