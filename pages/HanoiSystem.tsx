@@ -24,8 +24,8 @@ import { Button } from "@/components/prime";
 import { ALL_FACILITIES } from "@/constants";
 import { Sidebar } from "primereact/sidebar";
 import { Dialog } from "primereact/dialog";
+import "../styles/index.css"
 
-// Fix for default Leaflet icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -238,14 +238,7 @@ const HanoiSystem = () => {
         <div className="flex justify-between items-start">
           <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-1 rounded">
             {facility.category}
-          </span>
-          <Button
-            icon={<X size={16} />}
-            text
-            rounded
-            onClick={() => isMobile ? setSheetVisible(false) : setSelectedFacility(null)}
-            className="!text-white hover:!bg-white/20"
-          />
+          </span> 
         </div>
         <h2 className="text-lg font-black mt-2 leading-tight uppercase">
           {facility.name}
@@ -327,14 +320,7 @@ const HanoiSystem = () => {
         )}
 
         <div className="flex-grow relative bg-slate-200 overflow-hidden h-full z-0">
-          {isMobile && (
-            <div className="absolute top-0 left-0 right-0 p-4 z-10 flex flex-col gap-2">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input type="text" placeholder="Tìm kiếm cơ sở y tế..." className="w-full pl-9 pr-4 py-3 bg-white border-gray-200 rounded-xl shadow-lg focus:ring-2 focus:ring-primary-100 outline-none text-sm font-bold" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
-            </div>
-          )}
+          {/* The floating mobile search bar was here and is now removed. */}
 
           <MapContainer
             center={HANOI_CENTER}
@@ -378,15 +364,19 @@ const HanoiSystem = () => {
                 onHide={() => setSheetVisible(false)}
                 position="bottom"
                 className="h-[50vh] w-full"
-                showCloseIcon
+                showCloseIcon={false}
                 blockScroll
             >
                 <div className="h-full flex flex-col">
                     {selectedFacility ? (
                          <FacilityDetail facility={selectedFacility} />
-                    ) : (
-                        <div className="p-4 bg-gray-50 border-b border-gray-200">
-                             <h2 className="text-lg font-bold text-primary-900">Danh sách cơ sở ({filteredFacilities.length})</h2> 
+                    ) : (                                                                                                                                                 
+                      <div className="p-4 border-b border-gray-100 bg-gray-50">
+                        <h2 className="text-lg font-bold text-primary-900">Danh sách cơ sở ({filteredFacilities.length})</h2>    
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input type="text" placeholder="Tìm theo tên hoặc địa chỉ..." className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-100 outline-none text-sm font-bold" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                            </div>
                         </div>
                     )}
                     {!selectedFacility && <FacilityList />}
