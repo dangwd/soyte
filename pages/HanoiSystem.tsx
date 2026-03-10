@@ -373,7 +373,7 @@ const HanoiSystem = () => {
                 visible={sheetVisible}
                 onHide={() => setSheetVisible(false)}
                 position="bottom"
-                className="h-[80vh] w-full"
+                className="h-[50vh] w-full"
                 showCloseIcon={false}
                 blockScroll
             >
