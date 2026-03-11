@@ -38,7 +38,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       <Toast />
       <ConfirmDialog />
       {/* Sidebar Navigation */}
-      <aside className="w-64 bg-primary-900 text-white flex flex-col sticky top-0 h-screen shadow-2xl">
+      <aside className="w-64 shrink-0 bg-primary-900 text-white flex flex-col sticky top-0 h-screen shadow-2xl">
         <div className="px-6 py-4 flex items-center gap-4 border-b border-white/10">
           <div className="bg-white/10 p-2 rounded-lg">
             <LayoutDashboard size={24} className="text-secondary-400" />
@@ -105,7 +105,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col">
+      <main className="flex-grow flex flex-col min-w-0">
         {/* Admin Top Header */}
         <div className="bg-white px-8 py-4 shadow-sm flex items-center justify-between sticky top-0 z-10 border-b border-gray-200">
           <div className="flex items-center gap-4">
