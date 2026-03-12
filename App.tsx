@@ -48,6 +48,7 @@ const App = () => {
 
   return (
     <Layout>
+      <Toast ref={toast} />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />

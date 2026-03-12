@@ -63,17 +63,30 @@ const FormList: React.FC = () => {
               <span className="bg-secondary-500 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest mb-4 inline-block shadow-lg">
                 Dịch vụ công trực tuyến
               </span>
-              {
-
-              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight mb-4">
-                Phản ánh y tế
-              </h1>
-              }
-              <p className="text-primary-100 text-lg font-medium max-w-xl">
-                Gửi phản ánh và ý kiến của bạn về chất lượng dịch vụ y tế, thái
-                độ phục vụ và các vấn đề liên quan đến khám chữa bệnh để cơ quan
-                chức năng kịp thời tiếp nhận và xử lý.
-              </p>
+              {type === "phuluc" && (
+                <>
+                  <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight mb-4">
+                    Phản ánh y tế
+                  </h1>
+                  <p className="text-primary-100 text-lg font-medium max-w-xl">
+                    Gửi phản ánh và ý kiến của bạn về chất lượng dịch vụ y tế,
+                    thái độ phục vụ và các vấn đề liên quan đến khám chữa bệnh
+                    để cơ quan chức năng kịp thời tiếp nhận và xử lý.
+                  </p>
+                </>
+              )}
+              {type === "bieumau" && (
+                <>
+                  <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight mb-4">
+                    Giám sát chất lượng y tế
+                  </h1>
+                  <p className="text-primary-100 text-lg font-medium max-w-xl">
+                    Theo dõi và giám sát chất lượng dịch vụ y tế tại các cơ sở
+                    khám chữa bệnh, góp phần nâng cao hiệu quả quản lý và cải
+                    thiện trải nghiệm của người bệnh.
+                  </p>
+                </>
+              )}
             </div>
             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] shadow-2xl shrink-0 hidden lg:block">
               <div className="flex items-center gap-4 mb-4">
