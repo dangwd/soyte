@@ -1,5 +1,5 @@
 import AdminLayout from "../components/AdminLayout";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { formService } from "../services/formService";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
@@ -10,6 +10,7 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 
 import { Toast } from "@/components/prime";
+import { Plus } from "lucide-react";
 
 const statusOptions = [
   { label: 'Tất cả', value: 'all' },
@@ -161,6 +162,22 @@ const TemplatesManagement: React.FC = () => {
     );
   };
 
+  const stats = useMemo(() => {
+    // Note: Since data is paginated, these counts reflect the current page/local view
+    // In a real app, you might want a separate API for global counts
+    const total = totalRecords;
+    let active = 0;
+    let inactive = 0;
+
+    templates.forEach(t => {
+      const isA = t.status === true || t.status === 'active' || t.status === 'true';
+      if (isA) active++;
+      else inactive++;
+    });
+
+    return { total, active, inactive };
+  }, [templates, totalRecords]);
+
   // Client-side filter on top of fetched data
   const filteredTemplates = templates.filter((t) => {
     const matchesName = searchText
@@ -183,26 +200,53 @@ const TemplatesManagement: React.FC = () => {
   return (
     <AdminLayout title="Quản lý biểu mẫu">
       <Toast ref={toast} />
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Thẻ 1: Tổng số biểu mẫu */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+            <i className="pi pi-file text-lg"></i>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tổng biểu mẫu</p>
+            <h3 className="text-2xl font-black text-slate-800 leading-none">{stats.total}</h3>
+          </div>
+        </div>
+
+        {/* Thẻ 2: Đang hoạt động */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+            <i className="pi pi-check-circle text-lg"></i>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hoạt động</p>
+            <h3 className="text-2xl font-black text-slate-800 leading-none">{stats.active}</h3>
+          </div>
+        </div>
+
+        {/* Thẻ 3: Đang tắt */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0">
+            <i className="pi pi-eye-slash text-lg"></i>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đang ẩn</p>
+            <h3 className="text-2xl font-black text-slate-800 leading-none">{stats.inactive}</h3>
+          </div>
+        </div>
+        <div className="flex items-center justify-center">
+          <Button
+            onClick={() => handleAddNew()}
+            className="w-full !bg-secondary-600 hover:!bg-secondary-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-secondary-100 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1"
+          >
+            <Plus size={24} /> Thêm biểu mẫu
+          </Button>
+        </div>
+      </div>
+
       <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden p-6 relative">
         {/* Header */}
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-xl font-bold text-primary-900">Danh sách biểu mẫu</h2>
-          <Button
-            label="Thêm mới"
-            icon="pi pi-plus"
-            onClick={handleAddNew}
-            className="
-              bg-gradient-to-r from-primary-600 to-primary-500
-              border-none text-white
-              px-5 py-2.5
-              rounded-lg
-              shadow-md hover:shadow-lg active:shadow-sm
-              transition-all duration-200 ease-in-out
-              hover:-translate-y-0.5
-              active:scale-95
-              font-semibold tracking-wide
-            "
-          />
         </div>
 
         {/* Filter bar */}

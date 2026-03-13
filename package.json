@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
     "leaflet": "1.9.4",
     "lucide-react": "0.395.0",
