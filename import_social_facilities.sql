@@ -1,4 +1,4 @@
--- ==========================================
+﻿-- ==========================================
 -- TYPE: BT : Khối bảo trợ
 -- ==========================================
 INSERT INTO social_facilities (id, name, type, category, address, phone, latitude, longitude, description, created_at, updated_at) VALUES (N'bt-1', N'Làng trẻ em SOS Hà Nội', N'BT', N'Cơ sở bảo trợ', N'Số 2 Doãn Kế Thiện, Phường Mai Dịch, Thành phố Hà Nội', N'02437644022', 21.042362563429087, 105.77824791963384, N'Nuôi dưỡng và chăm sóc trẻ em mồ côi, có hoàn cảnh đặc biệt.', GETDATE(), GETDATE());
