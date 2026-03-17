@@ -1,8 +1,8 @@
 import { api } from '../api';
 
 export const formService = {
-    async fetchForms(page: number = 1, limit: number = 10) {
-        return api.get('/forms', { page, limit });
+    async fetchForms(page: number = 1, limit: number = 10, type?: string) {
+        return api.get('/forms', { page, limit, ...(type ? { type } : {}) });
     },
 
     async fetchFormById(id: string) {

@@ -60,14 +60,14 @@ interface TemplateData {
 
 const TemplateCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id, type } = useParams<{ id?: string; type?: string }>();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [template, setTemplate] = useState<TemplateData>({
     name: "",
     description: "",
     status: true,
-    type: "phuluc",
+    type: type || "phuluc",
     info: [],
     data: [
       {
@@ -156,7 +156,7 @@ const TemplateCreate: React.FC = () => {
 
       toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu biểu mẫu' });
       setTimeout(() => {
-        navigate('/admin/templates');
+        navigate(type ? `/admin/templates/${type}` : '/admin/templates');
       }, 1000);
     } catch (error) {
       console.error(error);
@@ -313,10 +313,6 @@ const TemplateCreate: React.FC = () => {
     return `${globalIndex}`;
   };
 
-  const templateTypeOptions = [
-    { label: 'Phụ lục', value: 'phuluc' },
-    { label: 'Biểu mẫu', value: 'bieumau' }
-  ];
 
   const addInfoField = () => {
     const currentInfo = template.info || [];
@@ -521,15 +517,23 @@ const TemplateCreate: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              {/* <div className="md:col-span-2">
                 <label className="block text-slate-700 font-bold mb-2">Loại biểu mẫu</label>
-                <Dropdown
-                  value={template.type || 'phuluc'}
-                  options={templateTypeOptions}
-                  onChange={(e) => setTemplate({ ...template, type: e.value })}
-                  className="w-full border-slate-300 focus:border-primary-500 shadow-sm text-base"
-                />
-              </div>
+                {template.type ==="reflect" &&
+                  <>       
+                  <span className="inline-block px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm border border-slate-200">
+                    Phản ánh y tế
+                  </span>
+                  </>
+                }
+                {template.type ==="evaluate" &&
+                  <>       
+                  <span className="inline-block px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm border border-slate-200">
+                    Đánh giá y tế
+                  </span>
+                  </>
+                }
+              </div> */}
               <div className="md:col-span-2">
                 <label className="block text-slate-700 font-bold mb-2">
                   Tên biểu mẫu <span className="text-red-500">*</span>
@@ -693,7 +697,7 @@ const TemplateCreate: React.FC = () => {
 
           <div className="flex-grow p-6 bg-white flex flex-col">
             <div className="rounded-xl border border-primary-200 overflow-x-auto shadow-sm relative">
-              {template.type === 'phuluc' ? (
+              {template.type === 'evaluate' ? (
                 <table className="w-full border-collapse min-w-max text-slate-700">
                   <thead className="bg-[var(--primary-color,#003159)] text-white">
                     <tr>

@@ -76,8 +76,8 @@ const App = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="schedules" element={<AdminWorkSchedule />} />{" "}
-          <Route path="templates" element={<TemplatesManagement />} />{" "}
-          <Route path="templates/create" element={<TemplateCreate />} />{" "}
+          <Route path="templates/:type?" element={<TemplatesManagement />} />{" "}
+          <Route path="templates/create/:type?" element={<TemplateCreate />} />{" "}
           <Route path="templates/edit/:id" element={<TemplateCreate />} />{" "}
           <Route path="feedbacks/:type?" element={<FeedbacksManagement />} />{" "}
           <Route

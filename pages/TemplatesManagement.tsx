@@ -4,7 +4,7 @@ import { formService } from "../services/formService";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
@@ -21,6 +21,7 @@ const statusOptions = [
 const TemplatesManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
   const navigate = useNavigate();
+  const { type } = useParams<{ type?: string }>();
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -53,8 +54,13 @@ const TemplatesManagement: React.FC = () => {
         total = data.length;
       }
 
+      // Filter client-side by type from route param
+      if (type) {
+        list = list.filter((item: any) => item.type === type);
+      }
+
       setTemplates(list);
-      setTotalRecords(total);
+      setTotalRecords(type ? list.length : total);
     } catch (error) {
       console.error(error);
       toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách biểu mẫu' });
@@ -65,7 +71,7 @@ const TemplatesManagement: React.FC = () => {
 
   useEffect(() => {
     fetchTemplates();
-  }, [lazyParams.page, lazyParams.rows]);
+  }, [lazyParams.page, lazyParams.rows, type]);
 
   const onPage = (event: any) => {
     setLazyParams({
@@ -76,7 +82,7 @@ const TemplatesManagement: React.FC = () => {
   };
 
   const handleAddNew = () => {
-    navigate('/admin/templates/create');
+    navigate(`/admin/templates/create/${type}`);
   };
 
   const editTemplate = (rowData: any) => {

@@ -76,4 +76,40 @@ export const adminMenu: MenuItem[] = [
     permission: "users",
     to: "/admin/social-facilities",
   },
+  {
+    key: "Medicalreflection",
+    label: "Phản ánh y tế",
+    icon: MessageSquare,
+    permission: "forms",
+    children: [
+      {
+        key: "feedback-list",
+        label: "Biểu mẫu",
+        to: "/admin/templates/reflect",
+      },
+      {
+        key: "feedback-statistics",
+        label: "Danh sách phản hồi",
+        to: "/admin/feedbacks/reflect",
+      },
+    ],
+  },
+  {
+    key: "Qualitysupervision",
+    label: "Giám sát chất lượng",
+    icon: MessageSquare,
+    permission: "forms",
+    children: [
+      {
+        key: "feedback-list",
+        label: "Biểu mẫu",
+        to: "/admin/templates/evaluate",
+      },
+      {
+        key: "feedback-statistics",
+        label: "Danh sách phản hồi",
+        to: "/admin/feedbacks/evaluate",
+      },
+    ],
+  },
 ];
