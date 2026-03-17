@@ -68,7 +68,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   };
 
   const checkPermission = (itemPermission?: string) => {
-    if (user?.role === "admin") return true;
+    // if (user?.role === "admin") return true;
     if (!itemPermission) return true;
     return user?.permissions?.includes(itemPermission);
   };
@@ -104,78 +104,73 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
                 const isOpen = Boolean(openMenus[item.key]);
                 const parentActive = isParentActive(item);
 
-              return (
-                <li key={item.key}>
-                  {hasChildren ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => toggleMenu(item.key)}
-                        className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${
-                          parentActive
+                return (
+                  <li key={item.key}>
+                    {hasChildren ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => toggleMenu(item.key)}
+                          className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${parentActive
+                              ? "bg-white/10 text-white"
+                              : "text-white hover:bg-white/10"
+                            }`}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon size={18} />
+                            <span>{item.label}</span>
+                          </span>
+
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                              }`}
+                          />
+                        </button>
+
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ${isOpen
+                              ? "mt-1 max-h-40 opacity-100"
+                              : "max-h-0 opacity-0"
+                            }`}
+                        >
+                          <ul className="ml-6 flex flex-col gap-1">
+                            {item.children?.map((child) => {
+                              const childActive = isActiveLink(child.to);
+
+                              return (
+                                <li key={child.key}>
+                                  <Link
+                                    to={child.to}
+                                    className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-colors ${childActive
+                                        ? "bg-white/10 font-semibold text-white"
+                                        : "text-white/90 hover:bg-white/10 hover:text-white"
+                                      }`}
+                                  >
+                                    {child.label}
+
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </>
+                    ) : (
+                      <Link
+                        to={item.to || "#"}
+                        className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${parentActive
                             ? "bg-white/10 text-white"
                             : "text-white hover:bg-white/10"
-                        }`}
-                      >
-                        <span className="flex items-center gap-3">
-                          <Icon size={18} />
-                          <span>{item.label}</span>                   
-                        </span>
-
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${
-                            isOpen ? "rotate-180" : ""
                           }`}
-                        />
-                      </button>
-
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ${
-                          isOpen
-                            ? "mt-1 max-h-40 opacity-100"
-                            : "max-h-0 opacity-0"
-                        }`}
                       >
-                        <ul className="ml-6 flex flex-col gap-1">
-                          {item.children?.map((child) => {
-                            const childActive = isActiveLink(child.to);
-
-                            return (
-                              <li key={child.key}>
-                                <Link
-                                  to={child.to}
-                                  className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-colors ${
-                                    childActive
-                                      ? "bg-white/10 font-semibold text-white"
-                                      : "text-white/90 hover:bg-white/10 hover:text-white"
-                                  }`}
-                                >
-                                  {child.label}
-
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    </>
-                  ) : (
-                    <Link
-                      to={item.to || "#"}
-                      className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${
-                        parentActive
-                          ? "bg-white/10 text-white"
-                          : "text-white hover:bg-white/10"
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
+                        <Icon size={18} />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
           </ul>
         </nav>
       </aside>
