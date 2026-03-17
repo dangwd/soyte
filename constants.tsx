@@ -65,7 +65,7 @@ export const SERVICE_CATEGORIES = [
   {
     id: 4,
     title: "Phản ánh Y Tế",
-    path: "/formsList/phuluc",
+    path: "/formsList/reflect",
     icon: ShieldPlus,
     containerClass:
       "bg-gradient-to-br from-emerald-50 via-emerald-100 to-emerald-50 border-emerald-200 hover:shadow-emerald-300",
@@ -145,7 +145,7 @@ export const SERVICE_CATEGORIES = [
   {
     id: 12,
     title: "Giám sát chất lượng dịch vụ y tế",
-    path: "/formsList/bieumau",
+    path: "/formsList/evaluate",
     icon: Award,
     containerClass:
       "bg-gradient-to-br from-yellow-50 via-yellow-100 to-yellow-50 border-yellow-200 hover:shadow-yellow-300",

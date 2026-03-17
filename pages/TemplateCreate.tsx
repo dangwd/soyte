@@ -67,7 +67,7 @@ const TemplateCreate: React.FC = () => {
     name: "",
     description: "",
     status: true,
-    type: type || "phuluc",
+    type: type || "reflect",
     info: [],
     data: [
       {
@@ -558,8 +558,8 @@ const TemplateCreate: React.FC = () => {
             </div>
           </div>
 
-          {/* INFO BUILDER (Only for bieumau) */}
-          {/* {template.type === 'bieumau' && ( */}
+          {/* INFO BUILDER (Only for evaluate) */}
+          {/* {template.type === 'evaluate' && ( */}
           <div className="p-6 border-b border-slate-100 bg-white flex-shrink-0">
             <div className="flex justify-between items-center mb-4">
               <div>

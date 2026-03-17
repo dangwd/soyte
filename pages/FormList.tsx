@@ -48,7 +48,7 @@ const FormList: React.FC = () => {
             <Home size={14} /> Trang chủ
           </Link>
           <ChevronRight size={14} className="mx-2 text-gray-300" />
-          {type === "phuluc" && (
+          {type === "reflect" && (
             <>
               <span className="text-primary-700">
                 Phản ánh y tế
@@ -56,7 +56,7 @@ const FormList: React.FC = () => {
               
             </>
           )}
-          {type === "bieumau" && (
+          {type === "evaluate" && (
             <>
               <span className="text-primary-700">
                 Giám sát chất lượng dịch vụ y tế
@@ -77,7 +77,7 @@ const FormList: React.FC = () => {
               <span className="bg-secondary-500 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest mb-4 inline-block shadow-lg">
                 Dịch vụ công trực tuyến
               </span>
-              {type === "phuluc" && (
+              {type === "reflect" && (
                 <>
                   <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight mb-4">
                     Phản ánh y tế
@@ -89,7 +89,7 @@ const FormList: React.FC = () => {
                   </p>
                 </>
               )}
-              {type === "bieumau" && (
+              {type === "evaluate" && (
                 <>
                   <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight leading-tight mb-4">
                     Giám sát chất lượng y tế

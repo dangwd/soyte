@@ -28,11 +28,11 @@ export default function EvaluationTable() {
 
   if (!formData) return null;
 
-  if (formType === "phuluc") {
+  if (formType === "reflect") {
     return <BieuMau1Table id={id} type={formType} formJson={formData} />;
   }
 
-  if (formType === "bieumau") {
+  if (formType === "evaluate") {
     return (
       <div className="bg-[radial-gradient(circle_at_top,_#f8fbff,_#eef4ff_45%,_#f8fafc_100%)]">
         <SurveyForm id={id} type={formType} formJson={formData} />

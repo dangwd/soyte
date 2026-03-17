@@ -5,7 +5,7 @@ export interface DashboardStats {
         accepted: number;
         averageRating: number;
     };
-    phuluc: {
+    reflect: {
         tiendo: {
             daLam: number;
             dangLam: number;
@@ -16,7 +16,7 @@ export interface DashboardStats {
             khongDat: number;
         };
     };
-    bieumau: {
+    evaluate: {
         ratingDistribution: {
             star5: number;
             star4: number;

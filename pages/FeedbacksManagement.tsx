@@ -164,13 +164,13 @@ const FeedbacksManagement: React.FC = () => {
     }
   };
 
-  // Hàm gọi API lấy thống kê
+  // Hàm gọi API lấy thống kê (toàn bộ, client chọn phần hiển thị theo type)
   const fetchDashboardStats = async (payload: { startDate: string, endDate: string }) => {
     try {
       const response = await feedBacksSevice.fetchStats(payload);
       const data = response.data?.data || response.data;
+      console.log(data);
       setStats(data);
-
     } catch (error) {
       console.error("Lỗi lấy thống kê:", error);
       toast.current?.show({
@@ -181,14 +181,14 @@ const FeedbacksManagement: React.FC = () => {
     }
   };
 
-  // useEffect này sẽ tự động chạy 1 lần khi load trang và mỗi khi dateFilter thay đổi
+  // Tự động chạy khi dateFilter hoặc type thay đổi
   useEffect(() => {
     fetchDashboardStats(dateFilter);
-  }, [dateFilter]);
+  }, [dateFilter, type]);
 
   // Tính toán phần trăm cho biểu đồ
-  const totalTiendo = stats ? (stats.phuluc.tiendo.daLam + stats.phuluc.tiendo.dangLam + stats.phuluc.tiendo.chuaLam) : 0;
-  const totalDanhgia = stats ? (stats.phuluc.danhgia.dat + stats.phuluc.danhgia.khongDat) : 0;
+  const totalTiendo = stats ? (stats.reflect.tiendo.daLam + stats.reflect.tiendo.dangLam + stats.reflect.tiendo.chuaLam) : 0;
+  const totalDanhgia = stats ? (stats.reflect.danhgia.dat + stats.reflect.danhgia.khongDat) : 0;
 
   // Hàm hỗ trợ tính % và làm tròn
   const getPercent = (value: number, total: number) => {
@@ -198,7 +198,7 @@ const FeedbacksManagement: React.FC = () => {
   // Cấu hình dữ liệu cho Biểu đồ Tiến độ
   const tiendoChartData = useMemo(() => {
     if (!stats) return { labels: [], datasets: [] };
-    const { tiendo } = stats.phuluc;
+    const { tiendo } = stats.reflect;
     return {
       labels: [
         `Đã làm (${getPercent(tiendo.daLam, totalTiendo)})`,
@@ -218,7 +218,7 @@ const FeedbacksManagement: React.FC = () => {
   // Cấu hình dữ liệu cho Biểu đồ Đánh giá
   const danhgiaChartData = useMemo(() => {
     if (!stats) return { labels: [], datasets: [] };
-    const { danhgia } = stats.phuluc;
+    const { danhgia } = stats.reflect;
     return {
       labels: [
         `Đạt (${getPercent(danhgia.dat, totalDanhgia)})`,
@@ -275,10 +275,10 @@ const FeedbacksManagement: React.FC = () => {
     }
   };
 
-  // Cấu hình cho biểu đồ cột ngang
+  // Cấu hình cho biểu đồ cột ngang (chỉ dùng cho type evaluate)
   const barChartData = useMemo(() => {
-    if (!stats) return { labels: [], datasets: [] };
-    const dist = stats.bieumau.ratingDistribution;
+    if (!stats || !stats.evaluate) return { labels: [], datasets: [] };
+    const dist = stats.evaluate.ratingDistribution;
     return {
       labels: ['Rất tốt (5★)', 'Tốt (4★)', 'Trung bình (3★)', 'Kém (2★)', 'Rất kém (1★)', 'Không đánh giá'],
       datasets: [
@@ -292,7 +292,7 @@ const FeedbacksManagement: React.FC = () => {
             dist.star1,
             dist.star0
           ],
-          backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444', '#94a3b8'], // Đổi màu theo từng mức độ
+          backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444', '#94a3b8'],
           borderRadius: 4
         }
       ]
@@ -318,6 +318,9 @@ const FeedbacksManagement: React.FC = () => {
       if (data?.items && Array.isArray(data.items)) { list = data.items; total = data.total || list.length; }
       else if (data?.data?.items && Array.isArray(data.data.items)) { list = data.data.items; total = data.data.total || list.length; }
       else if (Array.isArray(data)) { list = data; total = data.length; }
+      if(type){
+        list = list.filter((item) => item.type === type);    
+      }
       setFeedbacks(list);
       setTotalRecords(total);
     } catch (error) {
@@ -328,7 +331,7 @@ const FeedbacksManagement: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchFeedbacks(); }, [lazyParams.page, lazyParams.rows]);
+  useEffect(() => { fetchFeedbacks(); }, [lazyParams.page, lazyParams.rows,type]);
 
   const onPage = (event: any) => setLazyParams({ first: event.first, rows: event.rows, page: event.page + 1 });
 
@@ -465,79 +468,182 @@ const FeedbacksManagement: React.FC = () => {
         )}
       </div>
 
-      {/* ── THỐNG KÊ TỔNG QUAN ──────────────────────────────────────── */}
-      {/* ── BIỂU ĐỒ THỐNG KÊ (Chỉ hiện khi có dữ liệu phụ lục) ── */}
-      {stats?.phuluc && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-          {/* Biểu đồ Tiến độ */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
-            <h3 className="text-base font-bold text-primary-900 mb-4">
-              Tỉ lệ Tiến độ thực hiện
-            </h3>
+      {/* ── CHARTS: REFLECT ──────────────────────────────────── */}
+      {type === 'reflect' && stats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
 
-            <div className="w-full max-w-[350px] mx-auto h-[200px] relative">
-              <Chart
-                type="doughnut"
-                data={tiendoChartData}
-                options={chartOptions}
-                className="w-full h-full"
-              />
+          {/* Chart 1: Doughnut - Tiến độ */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Tiến độ thực hiện</h3>
+            <p className="text-xs text-slate-400 mb-4">Tỉ lệ đã / đang / chưa hoàn thành</p>
+            <div className="flex-grow flex items-center justify-center">
+              <div className="w-full h-[200px] relative">
+                <Chart type="doughnut" data={tiendoChartData} options={chartOptions} className="w-full h-full" />
+              </div>
             </div>
+            {stats.reflect && (
+              <div className="mt-4 flex justify-around text-center border-t border-slate-100 pt-4">
+                <div>
+                  <p className="text-lg font-black text-emerald-600">{stats.reflect.tiendo.daLam}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Đã làm</p>
+                </div>
+                <div>
+                  <p className="text-lg font-black text-amber-500">{stats.reflect.tiendo.dangLam}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Đang làm</p>
+                </div>
+                <div>
+                  <p className="text-lg font-black text-red-500">{stats.reflect.tiendo.chuaLam}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Chưa làm</p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Biểu đồ Đánh giá */}
+          {/* Chart 2: Doughnut - Đánh giá chất lượng */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
-            <h3 className="text-base font-bold text-primary-900 mb-4">
-              Tỉ lệ Đánh giá chất lượng
-            </h3>
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Đánh giá chất lượng</h3>
+            <p className="text-xs text-slate-400 mb-4">Tỉ lệ đạt / không đạt yêu cầu</p>
+            <div className="flex-grow flex items-center justify-center">
+              <div className="w-full h-[200px] relative">
+                <Chart type="doughnut" data={danhgiaChartData} options={chartOptions} className="w-full h-full" />
+              </div>
+            </div>
+            {stats.reflect && (
+              <div className="mt-4 flex justify-around text-center border-t border-slate-100 pt-4">
+                <div>
+                  <p className="text-lg font-black text-emerald-600">{stats.reflect.danhgia.dat}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Đạt</p>
+                </div>
+                <div>
+                  <p className="text-lg font-black text-red-500">{stats.reflect.danhgia.khongDat}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Không đạt</p>
+                </div>
+              </div>
+            )}
+          </div>
 
-            <div className="w-full max-w-[350px] mx-auto h-[200px] relative">
+          {/* Chart 3: Area Line - Xu hướng phiếu phản ánh */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Xu hướng phiếu phản ánh</h3>
+            <p className="text-xs text-slate-400 mb-4">Số phiếu tiếp nhận theo thời gian</p>
+            <div className="w-full h-[220px] relative mt-auto">
               <Chart
-                type="doughnut"
-                data={danhgiaChartData}
-                options={chartOptions}
+                type="line"
+                data={{
+                  labels: stats.trend.map(t => t.date),
+                  datasets: [{
+                    label: 'Số phiếu',
+                    data: stats.trend.map(t => t.count),
+                    fill: true,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.12)',
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#6366f1',
+                  }]
+                }}
+                options={{
+                  plugins: { legend: { display: false } },
+                  maintainAspectRatio: false,
+                  scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }}
                 className="w-full h-full"
               />
             </div>
           </div>
         </div>
       )}
-      {/* ── BIỂU ĐỒ XU HƯỚNG VÀ PHÂN BỔ ĐÁNH GIÁ ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-        {/* Biểu đồ đường: Xu hướng phản hồi */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 transition-transform hover:-translate-y-1 hover:shadow-md flex flex-col">
-          <h3 className="text-base font-bold text-primary-900 mb-4">
-            Tổng hợp số lượng phản hồi
-          </h3>
-          <div className="w-full h-[250px] relative mt-auto">
-            {stats && (
+
+      {/* ── CHARTS: EVALUATE ─────────────────────────────────── */}
+      {type === 'evaluate' && stats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+
+          {/* Chart 1: Horizontal Bar - Phân bố sao đánh giá */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md md:col-span-1">
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Phân bố mức hài lòng</h3>
+            <p className="text-xs text-slate-400 mb-4">Số phiếu theo mức đánh giá sao</p>
+            <div className="w-full h-[220px] relative mt-auto">
+              <Chart type="bar" data={barChartData} options={barChartOptions} className="w-full h-full" />
+            </div>
+          </div>
+
+          {/* Chart 2: Doughnut - Tổng quan tiếp nhận */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Tổng quan phiếu</h3>
+            <p className="text-xs text-slate-400 mb-4">Đã tiếp nhận / Chờ xử lý</p>
+            <div className="flex-grow flex items-center justify-center">
+              <div className="w-full h-[200px] relative">
+                {(() => {
+                  const accepted = stats.overview.accepted ?? 0;
+                  const pending = stats.overview.pending ?? 0;
+                  const total = stats.overview.total ?? 0;
+                  // Nếu cả hai đều 0 nhưng có tổng → hiện 1 segment "Tổng phiếu"
+                  const hasBreakdown = accepted > 0 || pending > 0;
+                  const chartLabels = hasBreakdown
+                    ? [`Đã tiếp nhận (${getPercent(accepted, total)})`, `Chờ xử lý (${getPercent(pending, total)})`]
+                    : [`Tổng phiếu (${total})`];
+                  const chartData = hasBreakdown ? [accepted, pending] : [total];
+                  const chartColors = hasBreakdown ? ['#10b981', '#f59e0b'] : ['#3b82f6'];
+                  return (
+                    <Chart
+                      type="doughnut"
+                      data={{
+                        labels: chartLabels,
+                        datasets: [{ data: chartData, backgroundColor: chartColors, hoverBackgroundColor: chartColors }]
+                      }}
+                      options={chartOptions}
+                      className="w-full h-full"
+                    />
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="mt-4 flex justify-around text-center border-t border-slate-100 pt-4">
+              <div>
+                <p className="text-lg font-black text-slate-800">{stats.overview.total ?? 0}</p>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Tổng phiếu</p>
+              </div>
+              <div>
+                <p className="text-lg font-black text-amber-500">{(stats.overview.averageRating ?? 0).toFixed(1)}</p>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Điểm TB</p>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Chart 3: Area Line - Xu hướng phiếu đánh giá */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
+            <h3 className="text-sm font-bold text-primary-900 mb-1">Xu hướng phiếu khảo sát</h3>
+            <p className="text-xs text-slate-400 mb-4">Số phiếu nộp theo thời gian</p>
+            <div className="w-full h-[220px] relative mt-auto">
               <Chart
                 type="line"
-                data={lineChartData}
-                options={lineChartOptions}
+                data={{
+                  labels: stats.trend.map(t => t.date),
+                  datasets: [{
+                    label: 'Số phiếu',
+                    data: stats.trend.map(t => t.count),
+                    fill: true,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.10)',
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#3b82f6',
+                  }]
+                }}
+                options={{
+                  plugins: { legend: { display: false } },
+                  maintainAspectRatio: false,
+                  scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }}
                 className="w-full h-full"
               />
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Biểu đồ cột ngang: Tổng hợp đánh giá từ Tệ đến Tốt */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 transition-transform hover:-translate-y-1 hover:shadow-md flex flex-col">
-          <h3 className="text-base font-bold text-primary-900 mb-4">
-            Tổng hợp mức độ hài lòng
-          </h3>
-          <div className="w-full h-[250px] relative mt-auto">
-            {stats && (
-              <Chart
-                type="bar"
-                data={barChartData}
-                options={barChartOptions}
-                className="w-full h-full"
-              />
-            )}
-          </div>
         </div>
-      </div>
+      )}
+
       {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-transform hover:-translate-y-1 hover:shadow-md">
           <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 flex-shrink-0">
@@ -689,7 +795,7 @@ const FeedbacksManagement: React.FC = () => {
                 </div>
               )} 
             {/* ── PHỤ LỤC TABLE ────────────────────────────────────── */}
-            {type === "feedback" && selectedFeedback.sections?.length > 0 && (
+            {type === "reflect" && selectedFeedback.sections?.length > 0 && (
               <div className="flex-grow px-6 py-5 flex flex-col"> 
                 <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                   <table className="w-full border-collapse text-slate-700 table-fixed">
@@ -898,7 +1004,7 @@ const FeedbacksManagement: React.FC = () => {
             )}
 
             {/* ── BIỂU MẪU SECTIONS ────────────────────────────────── */}
-            {type === "form" && selectedFeedback.sections?.length > 0 && (
+            {type === "evaluate" && selectedFeedback.sections?.length > 0 && (
               <div className="flex-grow px-6 py-5 flex flex-col gap-4">
                 {(() => {
                   let globalIdx = 0;
