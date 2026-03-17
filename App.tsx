@@ -79,7 +79,7 @@ const App = () => {
           <Route path="templates" element={<TemplatesManagement />} />{" "}
           <Route path="templates/create" element={<TemplateCreate />} />{" "}
           <Route path="templates/edit/:id" element={<TemplateCreate />} />{" "}
-          <Route path="feedbacks" element={<FeedbacksManagement />} />{" "}
+          <Route path="feedbacks/:type?" element={<FeedbacksManagement />} />{" "}
           <Route
             path="social-facilities"
             element={<SocialFacilitiesManagement />}
