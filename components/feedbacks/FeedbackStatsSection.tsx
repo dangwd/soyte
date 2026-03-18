@@ -2,6 +2,8 @@ import React from 'react';
 import { Chart } from "primereact/chart";
 import SatisfactionTrendChart from "@/components/Chart";
 import { DashboardStats } from '../../types/DashboardStats';
+import SatisfactionComponentChart from '../SatisfactionRadarChart';
+import OverviewStats from '../StatsChart';
 
 interface FeedbackStatsSectionProps {
   type?: string;
@@ -173,6 +175,14 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
 
       {/* ── CHARTS: EVALUATE ─────────────────────────────────── */}
       {type === 'evaluate' && (
+        <>
+        <div className="mb-6 bg-none">
+             <OverviewStats
+                  totalVotes={stats.overview?.total || 0}
+                  satisfactionRate={stats.overview?.averageRating/5*100 || 0}
+                  averageScore={stats.overview?.averageRating || 0}
+                />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
 
           {/* Chart 1: Horizontal Bar - Phân bố sao đánh giá */}
@@ -197,62 +207,7 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
           </div>
 
           {/* Chart 2: Doughnut - Tổng quan tiếp nhận */}
-          <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
-            {/* Tiêu đề & Mô tả */}
-            <div className="mb-4 flex flex-col justify-center">
-              <h3 className="text-[16px] font-semibold text-slate-700">Tổng quan phiếu</h3>
-              <p className="text-xs text-slate-500 mt-1">Đã tiếp nhận / Chờ xử lý</p>
-            </div>
-
-            {/* Lớp chứa biểu đồ (Lớp trong) */}
-            <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex flex-col flex-grow">
-              {/* Biểu đồ Doughnut */}
-              <div className="flex-grow w-full relative flex items-center justify-center min-h-[230px]">
-                {(() => {
-                  const accepted = stats.overview?.accepted ?? 0;
-                  const pending = stats.overview?.pending ?? 0;
-                  const total = stats.overview?.total ?? 0;
-                  const hasBreakdown = accepted > 0 || pending > 0;
-
-                  const chartLabels = hasBreakdown
-                    ? [`Đã tiếp nhận (${getPercentValue(accepted, total)})`, `Chờ xử lý (${getPercentValue(pending, total)})`]
-                    : [`Tổng phiếu (${total})`];
-                  const chartData = hasBreakdown ? [accepted, pending] : [total];
-                  const chartColors = hasBreakdown ? ['#10b981', '#f59e0b'] : ['#3b82f6'];
-
-                  return (
-                    <Chart
-                      type="doughnut"
-                      data={{
-                        labels: chartLabels,
-                        datasets: [{
-                          data: chartData,
-                          backgroundColor: chartColors,
-                          hoverBackgroundColor: chartColors,
-                          borderWidth: 0 // Bỏ viền để đồng bộ độ mượt
-                        }]
-                      }}
-                      options={{ ...chartOptions, maintainAspectRatio: false }}
-                      className="h-full w-full absolute inset-0 pb-4"
-                    />
-                  );
-                })()}
-              </div>
-
-              {/* Phần thống kê nằm gọn trong lớp màu trắng */}
-              <div className="mt-2 flex justify-around text-center border-t border-slate-100 pt-4">
-                <div>
-                  <p className="text-[18px] font-bold text-slate-700">{stats.overview?.total ?? 0}</p>
-                  <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Tổng phiếu</p>
-                </div>
-                <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
-                <div>
-                  <p className="text-[18px] font-bold text-amber-500">{(stats.overview?.averageRating ?? 0).toFixed(1)}</p>
-                  <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Điểm TB</p>
-                </div>
-              </div>
-            </div>
-          </div>
+           
 
           {/* Chart 4: Satisfaction Trend */}
           {stats?.summary?.map((item: any, index: number) => (
@@ -262,7 +217,16 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
               summaryItem={item}
             />
           ))}
+          {stats?.summary?.map((item: any, index: number) => (
+            <SatisfactionComponentChart
+              key={item.id || index}
+              series={item.series}
+              title={item.name}
+            />
+          ))}
+         
         </div>
+        </>
       )}
     </>
   );
