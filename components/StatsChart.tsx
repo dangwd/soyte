@@ -57,7 +57,7 @@ export default function OverviewStats({
   averageText = "Thang điểm 5.0",
 }: OverviewStatsProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3  bg-[#f8fafc]">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 ">
       <StatCard
         title="Tổng số phiếu"
         value={totalVotes.toLocaleString("vi-VN")}

@@ -4,6 +4,7 @@ import SatisfactionTrendChart from "@/components/Chart";
 import { DashboardStats } from '../../types/DashboardStats';
 import SatisfactionComponentChart from '../SatisfactionRadarChart';
 import OverviewStats from '../StatsChart';
+import SectionStackedChart from '../SectionStackedChart';
 
 interface FeedbackStatsSectionProps {
   type?: string;
@@ -190,6 +191,11 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
               </div>
             </div>
           </div> */}
+          <SectionStackedChart
+            title="Phân tích chuyên sâu: Tiến độ thực hiện"
+            data={stats?.reflect?.bySection}
+            type="tiendo"
+          />
         </div>
       )}
 

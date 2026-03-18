@@ -25,6 +25,19 @@ export interface DashboardStats {
       dat: number;
       khongDat: number;
     };
+    bySection: {
+      name: string;
+      total: number;
+      tiendo: {
+        daLam: number;
+        dangLam: number;
+        chuaLam: number;
+      };
+      danhgia: {
+        dat: number;
+        khongDat: number;
+      };
+    }[];
   };
   trend: {
     date: string;
