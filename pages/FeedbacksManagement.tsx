@@ -10,6 +10,7 @@ import { formService } from "../services/formService";
 import { Chart } from "primereact/chart";
 import { DashboardStats } from "../types/DashboardStats";
 import { useParams } from "react-router-dom";
+import SatisfactionTrendChart from "@/components/Chart";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -59,25 +60,34 @@ const RatingBadge: React.FC<{ value: number }> = ({ value }) => {
 // HÀM HỖ TRỢ LẤY NGÀY ĐẦU VÀ CUỐI THÁNG 
 const getDefaultDates = () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // Tháng trong JS bắt đầu từ 0 (0 = Tháng 1)
 
-  // Ngày đầu tháng: Truyền vào mùng 1
-  const firstDay = new Date(year, month, 1);
-  // Ngày cuối tháng: Truyền vào ngày 0 của tháng tiếp theo (mẹo nhỏ trong JS)
-  const lastDay = new Date(year, month + 1, 0);
+  // Tháng hiện tại
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // Hàm fomat ngày sang YYYY-MM-DD
+  // Lùi 11 tháng (để đủ 12 tháng tính cả hiện tại)
+  const startDate = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() - 11,
+    1
+  );
+
+  // Ngày cuối tháng hiện tại
+  const endDate = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  );
+
   const formatDate = (date: Date) => {
     const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   };
 
   return {
-    startDate: formatDate(firstDay),
-    endDate: formatDate(lastDay)
+    startDate: formatDate(startDate),
+    endDate: formatDate(endDate),
   };
 };
 
@@ -99,13 +109,14 @@ const FeedbacksManagement: React.FC = () => {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [infoLabels, setInfoLabels] = useState<Record<string, string>>({});
   const [dateFilter, setDateFilter] = useState<{ startDate: string, endDate: string }>(getDefaultDates());
-  const [filterType, setFilterType] = useState<string>("this_month");
+  const [filterType, setFilterType] = useState<string>("this_year");
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
   const { type } = useParams();
   const filterOptions = [
     { label: 'Tháng này', value: 'this_month' },
     { label: 'Tháng trước', value: 'last_month' },
+    { label: 'Năm này', value: 'this_year' },
     { label: '6 tháng đầu năm', value: 'first_half' },
     { label: '6 tháng cuối năm', value: 'second_half' },
     { label: 'Tùy chọn', value: 'custom' }
@@ -134,7 +145,11 @@ const FeedbacksManagement: React.FC = () => {
     } else if (type === 'first_half') {
       start = new Date(year, 0, 1);
       end = new Date(year, 5, 30);
-    } else if (type === 'second_half') {
+    }else if (type === 'this_year') {
+      start = new Date(year, 0, 1);
+      end = new Date(year, 11, 31);
+    }
+     else if (type === 'second_half') {
       start = new Date(year, 6, 1);
       end = new Date(year, 11, 31);
     } else if (type === 'custom') {
@@ -470,7 +485,7 @@ const FeedbacksManagement: React.FC = () => {
 
       {/* ── CHARTS: REFLECT ──────────────────────────────────── */}
       {type === 'reflect' && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
 
           {/* Chart 1: Doughnut - Tiến độ */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
@@ -551,12 +566,13 @@ const FeedbacksManagement: React.FC = () => {
               />
             </div>
           </div>
+                
         </div>
       )}
 
       {/* ── CHARTS: EVALUATE ─────────────────────────────────── */}
       {type === 'evaluate' && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
 
           {/* Chart 1: Horizontal Bar - Phân bố sao đánh giá */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md md:col-span-1">
@@ -612,7 +628,7 @@ const FeedbacksManagement: React.FC = () => {
 
 
           {/* Chart 3: Area Line - Xu hướng phiếu đánh giá */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
+          {/* <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md">
             <h3 className="text-sm font-bold text-primary-900 mb-1">Xu hướng phiếu khảo sát</h3>
             <p className="text-xs text-slate-400 mb-4">Số phiếu nộp theo thời gian</p>
             <div className="w-full h-[220px] relative mt-auto">
@@ -639,8 +655,15 @@ const FeedbacksManagement: React.FC = () => {
                 className="w-full h-full"
               />
             </div>
-          </div>
-
+          </div> */}
+          {/* Chart 4: */}
+            {stats?.summary?.map((item, index) => (
+              <SatisfactionTrendChart
+                key={item.id}
+                categories={stats.categories}
+                summaryItem={item}
+              />
+            ))}  
         </div>
       )}
 
