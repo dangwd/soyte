@@ -20,6 +20,7 @@ import TemplatesManagement from "./pages/TemplatesManagement";
 import TemplateCreate from "./pages/TemplateCreate";
 import FeedbacksManagement from "./pages/FeedbacksManagement";
 import AdminRoute from "./components/AdminRoute";
+import SocialFacilitiesManagement from "./pages/SocialFacilitiesManagement";
 import { useAuth } from "./AuthContext";
 import { Toast } from "@/components/prime";
 import { useRef } from "react";
@@ -29,7 +30,7 @@ import { ConfirmDialog } from "primereact/confirmdialog";
 const App = () => {
   const { loading } = useAuth();
   const toast = useRef(null);
-  window.$toast = toast;
+  (window as any).$toast = toast;
 
   if (loading) {
     return (
@@ -79,6 +80,10 @@ const App = () => {
           <Route path="templates/create" element={<TemplateCreate />} />{" "}
           <Route path="templates/edit/:id" element={<TemplateCreate />} />{" "}
           <Route path="feedbacks" element={<FeedbacksManagement />} />{" "}
+          <Route
+            path="social-facilities"
+            element={<SocialFacilitiesManagement />}
+          />{" "}
           {/* New Admin Schedule Route */}
           <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
