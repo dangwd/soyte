@@ -3,11 +3,11 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { feedBacksSevice } from '@/services/feedBacksSevice'
 import { ReportTabContent } from '@/components/feedbacks/ReportTabContent'
 import { FeedbackFilters } from '@/components/feedbacks/FeedbackFilters'
-import { Toast } from '@/components/prime'
+import { Button, Toast } from '@/components/prime'
 import { TabView, TabPanel } from 'primereact/tabview'
 import { FeedbackItem } from '@/types/feedbacks'
-
 import { formatDateVN, getDefaultDates } from '@/utils/dateUtils'
+import { exportReportToPDF } from '@/utils/pdfExport'
 
 const Report_DCBC = () => {
     const toast = useRef<Toast>(null);
@@ -120,6 +120,17 @@ const Report_DCBC = () => {
         return groups;
     }, [feedbacks]);
 
+    // Hàm xuất PDF
+    const exportToPDF = async () => {
+        await exportReportToPDF(
+            groupedFeedbacks,
+            dateFilter,
+            setLoading,
+            (msg) => toast.current?.show({ severity: 'success', summary: 'Thành công', detail: msg }),
+            (msg) => toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: msg })
+        );
+    };
+
     const reportHeader = (
         <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center">
@@ -128,6 +139,14 @@ const Report_DCBC = () => {
             <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
                 Kết quả tiếp nhận báo cáo từ ngày <span className="text-primary-700">{formatDateVN(dateFilter.startDate)}</span> đến ngày <span className="text-primary-700">{formatDateVN(dateFilter.endDate)}</span>
             </h2>
+            <Button
+                label="Xuất PDF"
+                icon="pi pi-file-pdf"
+                className="ml-auto bg-gradient-to-br from-primary-500 to-primary-700 border-none rounded-2xl font-bold shadow-lg shadow-primary-200/50 hover:shadow-primary-300/60 active:translate-y-0 active:scale-95 transition-all duration-200 text-white px-6 py-2.5 flex items-center gap-2"
+                onClick={exportToPDF}
+                disabled={loading || feedbacks.length === 0}
+                loading={loading}
+            />
         </div>
     );
 
