@@ -5,6 +5,7 @@ import { DashboardStats } from '../../types/DashboardStats';
 import SatisfactionComponentChart from '../SatisfactionRadarChart';
 import OverviewStats from '../StatsChart';
 import SectionStackedChart from '../SectionStackedChart';
+import SummaryCards from '../SummaryCards';
 
 interface FeedbackStatsSectionProps {
   type?: string;
@@ -71,88 +72,119 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
   return (
     <>
       {/* ── CHARTS: REFLECT ──────────────────────────────────── */}
-      {type === 'reflect' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-
-          {/* Chart 1: Doughnut - Tiến độ */}
-          <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
-            {/* Tiêu đề & Mô tả */}
-            <div className="mb-4 flex flex-col justify-center">
-              <h3 className="text-[16px] font-semibold text-slate-700">Tiến độ thực hiện</h3>
-              <p className="text-xs text-slate-500 mt-1">Tỉ lệ đã / đang / chưa hoàn thành</p>
-            </div>
-
-            {/* Lớp chứa biểu đồ (Lớp trong) */}
-            <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex flex-col flex-grow">
-              <div className="flex-grow w-full relative flex items-center justify-center min-h-[230px]">
-                <Chart
-                  type="doughnut"
-                  data={tiendoChartData}
-                  options={{ ...chartOptions, maintainAspectRatio: false }}
-                  className="w-full h-full absolute inset-0 pb-4"
-                />
+      {type === "reflect" && (
+        <>
+          <div className="mb-6 bg-none">
+            <SummaryCards data={stats} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            {/* Chart 1: Doughnut - Tiến độ */}
+            <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
+              {/* Tiêu đề & Mô tả */}
+              <div className="mb-4 flex flex-col justify-center">
+                <h3 className="text-[16px] font-semibold text-slate-700">
+                  Tiến độ thực hiện
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Tỉ lệ đã / đang / chưa hoàn thành
+                </p>
               </div>
 
-              {/* Thông số phụ */}
-              {stats.reflect && (
-                <div className="mt-2 flex justify-around text-center border-t border-slate-100 pt-4">
-                  <div>
-                    <p className="text-[18px] font-bold text-emerald-600">{stats.reflect.tiendo.daLam}</p>
-                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Đã làm</p>
-                  </div>
-                  <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
-                  <div>
-                    <p className="text-[18px] font-bold text-amber-500">{stats.reflect.tiendo.dangLam}</p>
-                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Đang làm</p>
-                  </div>
-                  <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
-                  <div>
-                    <p className="text-[18px] font-bold text-red-500">{stats.reflect.tiendo.chuaLam}</p>
-                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Chưa làm</p>
-                  </div>
+              {/* Lớp chứa biểu đồ (Lớp trong) */}
+              <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex flex-col flex-grow">
+                <div className="flex-grow w-full relative flex items-center justify-center min-h-[230px]">
+                  <Chart
+                    type="doughnut"
+                    data={tiendoChartData}
+                    options={{ ...chartOptions, maintainAspectRatio: false }}
+                    className="w-full h-full absolute inset-0 pb-4"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Chart 2: Doughnut - Đánh giá chất lượng */}
-          <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
-            {/* Tiêu đề & Mô tả */}
-            <div className="mb-4 flex flex-col justify-center">
-              <h3 className="text-[16px] font-semibold text-slate-700">Đánh giá chất lượng</h3>
-              <p className="text-xs text-slate-500 mt-1">Tỉ lệ đạt / không đạt yêu cầu</p>
+                {/* Thông số phụ */}
+                {stats.reflect && (
+                  <div className="mt-2 flex justify-around text-center border-t border-slate-100 pt-4">
+                    <div>
+                      <p className="text-[18px] font-bold text-emerald-600">
+                        {stats.reflect.tiendo.daLam}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">
+                        Đã làm
+                      </p>
+                    </div>
+                    <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
+                    <div>
+                      <p className="text-[18px] font-bold text-amber-500">
+                        {stats.reflect.tiendo.dangLam}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">
+                        Đang làm
+                      </p>
+                    </div>
+                    <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
+                    <div>
+                      <p className="text-[18px] font-bold text-red-500">
+                        {stats.reflect.tiendo.chuaLam}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">
+                        Chưa làm
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Lớp chứa biểu đồ (Lớp trong) */}
-            <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex flex-col flex-grow">
-              <div className="flex-grow w-full relative flex items-center justify-center min-h-[230px]">
-                <Chart
-                  type="doughnut"
-                  data={danhgiaChartData}
-                  options={{ ...chartOptions, maintainAspectRatio: false }}
-                  className="w-full h-full absolute inset-0 pb-4"
-                />
+            {/* Chart 2: Doughnut - Đánh giá chất lượng */}
+            <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
+              {/* Tiêu đề & Mô tả */}
+              <div className="mb-4 flex flex-col justify-center">
+                <h3 className="text-[16px] font-semibold text-slate-700">
+                  Đánh giá chất lượng
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Tỉ lệ đạt / không đạt yêu cầu
+                </p>
               </div>
 
-              {/* Thông số phụ */}
-              {stats.reflect && (
-                <div className="mt-2 flex justify-around text-center border-t border-slate-100 pt-4">
-                  <div>
-                    <p className="text-[18px] font-bold text-emerald-600">{stats.reflect.danhgia.dat}</p>
-                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Đạt</p>
-                  </div>
-                  <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
-                  <div>
-                    <p className="text-[18px] font-bold text-red-500">{stats.reflect.danhgia.khongDat}</p>
-                    <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Không đạt</p>
-                  </div>
+              {/* Lớp chứa biểu đồ (Lớp trong) */}
+              <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex flex-col flex-grow">
+                <div className="flex-grow w-full relative flex items-center justify-center min-h-[230px]">
+                  <Chart
+                    type="doughnut"
+                    data={danhgiaChartData}
+                    options={{ ...chartOptions, maintainAspectRatio: false }}
+                    className="w-full h-full absolute inset-0 pb-4"
+                  />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Chart 3: Area Line - Xu hướng phiếu phản ánh (Đã được định dạng đồng bộ để sẵn sàng sử dụng) */}
-          {/* <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-2 lg:col-span-2">
+                {/* Thông số phụ */}
+                {stats.reflect && (
+                  <div className="mt-2 flex justify-around text-center border-t border-slate-100 pt-4">
+                    <div>
+                      <p className="text-[18px] font-bold text-emerald-600">
+                        {stats.reflect.danhgia.dat}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">
+                        Đạt
+                      </p>
+                    </div>
+                    <div className="w-[1px] bg-slate-200 h-10 self-center"></div>
+                    <div>
+                      <p className="text-[18px] font-bold text-red-500">
+                        {stats.reflect.danhgia.khongDat}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">
+                        Không đạt
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Chart 3: Area Line - Xu hướng phiếu phản ánh (Đã được định dạng đồng bộ để sẵn sàng sử dụng) */}
+            {/* <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-2 lg:col-span-2">
             <div className="mb-4 flex flex-col justify-center">
               <h3 className="text-[16px] font-semibold text-slate-700">Xu hướng phiếu phản ánh</h3>
               <p className="text-xs text-slate-500 mt-1">Số phiếu tiếp nhận theo thời gian</p>
@@ -191,67 +223,69 @@ export const FeedbackStatsSection: React.FC<FeedbackStatsSectionProps> = ({
               </div>
             </div>
           </div> */}
-          <SectionStackedChart
-            title="Phân tích chuyên sâu: Tiến độ thực hiện"
-            data={stats?.reflect?.bySection}
-            type="tiendo"
-          />
-        </div>
+            <SectionStackedChart
+              title="Phân tích chuyên sâu: Tiến độ thực hiện"
+              data={stats?.reflect?.bySection}
+              type="tiendo"
+            />
+          </div>
+        </>
       )}
 
       {/* ── CHARTS: EVALUATE ─────────────────────────────────── */}
-      {type === 'evaluate' && (
+      {type === "evaluate" && (
         <>
-        <div className="mb-6 bg-none">
-             <OverviewStats
-                  totalVotes={stats.overview?.total || 0}
-                  satisfactionRate={stats.overview?.averageRating/5*100 || 0}
-                  averageScore={stats.overview?.averageRating || 0}
-                />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div className="mb-6 bg-none">
+            <OverviewStats
+              totalVotes={stats.overview?.total || 0}
+              satisfactionRate={(stats.overview?.averageRating / 5) * 100 || 0}
+              averageScore={stats.overview?.averageRating || 0}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            {/* Chart 1: Horizontal Bar - Phân bố sao đánh giá */}
+            <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
+              {/* Tiêu đề & Mô tả */}
+              <div className="mb-4 flex flex-col justify-center">
+                <h3 className="text-[16px] font-semibold text-slate-700">
+                  Phân bố mức hài lòng
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Số phiếu theo mức đánh giá sao
+                </p>
+              </div>
 
-          {/* Chart 1: Horizontal Bar - Phân bố sao đánh giá */}
-          <div className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-5 shadow-sm flex flex-col transition-transform md:col-span-1">
-            {/* Tiêu đề & Mô tả */}
-            <div className="mb-4 flex flex-col justify-center">
-              <h3 className="text-[16px] font-semibold text-slate-700">Phân bố mức hài lòng</h3>
-              <p className="text-xs text-slate-500 mt-1">Số phiếu theo mức đánh giá sao</p>
-            </div>
-
-            {/* Lớp chứa biểu đồ (Lớp trong) */}
-            <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex-grow">
-              <div className="h-[320px] w-full">
-                <Chart
-                  type="bar"
-                  data={barChartData}
-                  options={{ ...barChartOptions, maintainAspectRatio: false }}
-                  className="h-full w-full"
-                />
+              {/* Lớp chứa biểu đồ (Lớp trong) */}
+              <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm flex-grow">
+                <div className="h-[320px] w-full">
+                  <Chart
+                    type="bar"
+                    data={barChartData}
+                    options={{ ...barChartOptions, maintainAspectRatio: false }}
+                    className="h-full w-full"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Chart 2: Doughnut - Tổng quan tiếp nhận */}
+
+            {/* Chart 4: Satisfaction Trend */}
+            {stats?.summary?.map((item: any, index: number) => (
+              <SatisfactionTrendChart
+                key={item.id || index}
+                categories={stats.categories}
+                summaryItem={item}
+              />
+            ))}
+            {stats?.summary?.map((item: any, index: number) => (
+              <SatisfactionComponentChart
+                key={item.id || index}
+                series={item.series}
+                title={item.name}
+              />
+            ))}
           </div>
-
-          {/* Chart 2: Doughnut - Tổng quan tiếp nhận */}
-           
-
-          {/* Chart 4: Satisfaction Trend */}
-          {stats?.summary?.map((item: any, index: number) => (
-            <SatisfactionTrendChart
-              key={item.id || index}
-              categories={stats.categories}
-              summaryItem={item}
-            />
-          ))}
-          {stats?.summary?.map((item: any, index: number) => (
-            <SatisfactionComponentChart
-              key={item.id || index}
-              series={item.series}
-              title={item.name}
-            />
-          ))}
-         
-        </div>
         </>
       )}
     </>

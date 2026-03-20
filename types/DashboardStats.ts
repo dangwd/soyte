@@ -28,6 +28,13 @@ export interface DashboardStats {
         khongDat: number;
       };
     }[];
+    summary: {
+      completedProgress: number;
+      completedRate: number;
+      needsFix: number;
+      reachedRate: number;
+      totalContent: number;
+    };
   };
   evaluate: {
     ratingDistribution: {
