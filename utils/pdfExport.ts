@@ -174,11 +174,9 @@ export const exportReportToPDF = async (
                     let sttCounter = 1; // Đếm STT liên tục cho toàn bảng
 
                     templateSections.forEach((sec: any, si: number) => {
-                        // Thêm dòng tiêu đề mục (I, II, III...)
-                        table2Body.push([
-                            { content: sectionRoman[si] || si + 1, styles: { halign: 'center', fontStyle: 'bold' } },
-                            { content: sec.name, colSpan: 6, styles: { fontStyle: 'bold' } }
-                        ]);
+                        // Tính toán tổng cho cả section trước khi thêm header
+                        let secDaLam = 0, secDangLam = 0, secChuaLam = 0;
+                        const optionRows: any[] = [];
 
                         sec.option.forEach((opt: any) => {
                             let daLam = 0, dangLam = 0, chuaLam = 0;
@@ -187,19 +185,38 @@ export const exportReportToPDF = async (
                                 const dfbOpt = dfbSec?.option?.find((o: any) => o.content === opt.content);
                                 if (dfbOpt) {
                                     const tiendo = Number(dfbOpt.tiendo);
-                                    if (tiendo === 1) daLam++; else if (tiendo === 2) dangLam++; else if (tiendo === 3) chuaLam++;
+                                    if (tiendo === 1) daLam++;
+                                    else if (tiendo === 2) dangLam++;
+                                    else if (tiendo === 3) chuaLam++;
                                 }
                             });
-                            table2Body.push([
+                            
+                            secDaLam += daLam;
+                            secDangLam += dangLam;
+                            secChuaLam += chuaLam;
+
+                            optionRows.push([
                                 sttCounter++,
                                 opt.content,
                                 opt.method || '',
                                 opt.productOut || '',
-                                daLam || 0,
-                                dangLam || 0,
-                                chuaLam || 0
+                                daLam || '---',
+                                dangLam || '---',
+                                chuaLam || '---'
                             ]);
                         });
+
+                        // Thêm dòng tiêu đề mục (I, II, III...) kèm theo tổng số
+                        table2Body.push([
+                            { content: sectionRoman[si] || si + 1, styles: { halign: 'center', fontStyle: 'bold' } },
+                            { content: sec.name, colSpan: 3, styles: { fontStyle: 'bold' } },
+                            { content: secDaLam || '---', styles: { halign: 'center', fontStyle: 'bold' } },
+                            { content: secDangLam || '---', styles: { halign: 'center', fontStyle: 'bold' } },
+                            { content: secChuaLam || '---', styles: { halign: 'center', fontStyle: 'bold' } }
+                        ]);
+
+                        // Thêm các dòng nội dung của mục đó
+                        table2Body.push(...optionRows);
                     });
 
                     if (currentY > 230) { doc.addPage(); currentY = 25; drawHeader(doc); currentY = 40; }
