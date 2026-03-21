@@ -129,7 +129,6 @@ const TableOptionRow = memo(function TableOptionRow({
   item,
   sIndex,
   oIndex,
-  noteError,
   progressError,
   ratingError,
   onUpdateNote,
@@ -139,7 +138,6 @@ const TableOptionRow = memo(function TableOptionRow({
   item: any;
   sIndex: number;
   oIndex: number;
-  noteError: boolean;
   progressError: boolean;
   ratingError: boolean;
   onUpdateNote: (
@@ -158,7 +156,7 @@ const TableOptionRow = memo(function TableOptionRow({
     value: OptionValue,
   ) => void;
 }) {
-  const itemHasError = noteError || progressError || ratingError;
+  const itemHasError = progressError || ratingError;
 
   return (
     <div
@@ -214,36 +212,18 @@ const TableOptionRow = memo(function TableOptionRow({
           </div>
         </div>
 
-        <div
-          className={`rounded-2xl border bg-slate-50/60 p-4 ${
-            noteError ? "border-red-500 bg-red-50/70" : "border-slate-200/70"
-          }`}
-        >
-          <div
-            className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-              noteError ? "text-red-500" : "text-slate-400"
-            }`}
-          >
-            Ghi chú / Kiến nghị <span className="text-red-500">*</span>
+        <div className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4">
+          <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Ghi chú / Kiến nghị
           </div>
 
           <InputTextarea
             value={item.note || ""}
             onChange={(e) => onUpdateNote(sIndex, oIndex, e.target.value)}
-            rows={3}          
-            className={`w-full rounded-2xl border bg-white/80 px-4 py-3 text-[15px] shadow-sm outline-none transition-all ${
-              noteError
-                ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                : "border-slate-200 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-            }`}
+            rows={3}
+            className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-[15px] shadow-sm outline-none transition-all focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
             placeholder="Nhập ghi chú hoặc kiến nghị"
           />
-
-          {noteError && (
-            <small className="mt-2 block text-red-500">
-              Vui lòng nhập ghi chú / kiến nghị
-            </small>
-          )}
         </div>
       </div>
 
@@ -369,7 +349,6 @@ const TableSection = memo(function TableSection({
 }) {
   const sectionHasError = section.option.some((_: any, oIndex: number) => {
     return (
-      errors[`note-${sIndex}-${oIndex}`] ||
       errors[`progress-${sIndex}-${oIndex}`] ||
       errors[`rating-${sIndex}-${oIndex}`]
     );
@@ -409,7 +388,6 @@ const TableSection = memo(function TableSection({
               item={item}
               sIndex={sIndex}
               oIndex={oIndex}
-              noteError={!!errors[`note-${sIndex}-${oIndex}`]}
               progressError={!!errors[`progress-${sIndex}-${oIndex}`]}
               ratingError={!!errors[`rating-${sIndex}-${oIndex}`]}
               onUpdateNote={onUpdateNote}
@@ -588,9 +566,6 @@ useEffect(() => {
         return next;
       });
 
-      if (value.trim()) {
-        clearFieldError(`note-${sectionIndex}-${optionIndex}`);
-      }
     },
     [clearFieldError],
   );
@@ -639,11 +614,6 @@ useEffect(() => {
           isValid = false;
         }
 
-        if (!noteValue || !String(noteValue).trim()) {
-          newErrors[`note-${sectionIndex}-${optionIndex}`] = true;
-          sectionsToOpen[sectionIndex] = true;
-          isValid = false;
-        }
       });
     });
 
