@@ -1,5 +1,5 @@
-const BASE_URL = 'https://suckhoethudo.vn:7005/api';
-//const BASE_URL = 'https://10.10.10.19:7002/api';
+// const BASE_URL = 'https://suckhoethudo.vn:7005/api';
+const BASE_URL = 'https://localhost:7002/api';
 
 export const api = {
   async get(endpoint: string, params?: Record<string, any>) {
@@ -147,5 +147,13 @@ export const api = {
 
   async createUser(data: any) {
     return this.post('/users', data);
+  },
+
+  async getEmailAccounts() {
+    return this.get('/email-accounts');
+  },
+
+  async register(data: any) {
+    return this.post('/auth/register', data);
   }
 };

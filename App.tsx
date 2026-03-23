@@ -28,6 +28,7 @@ import { Toast } from "@/components/prime";
 import { useRef } from "react";
 import FormDetail from "./pages/FormDetail";
 import FormList from "./pages/FormList";
+import ConfirmPassword from "./pages/ConfirmPassword";
 import { ConfirmDialog } from "primereact/confirmdialog";
 const App = () => {
   const { loading } = useAuth();
@@ -56,6 +57,7 @@ const App = () => {
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/confirm-password/:username" element={<ConfirmPassword />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/health-records/detail"

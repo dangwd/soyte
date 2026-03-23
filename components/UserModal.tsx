@@ -13,7 +13,7 @@ import {
   Shield,
   X,
   Save,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Toast } from "primereact/toast";
 import { Button, InputText, Dropdown } from "@/components/prime";
@@ -39,23 +39,40 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
     type: "",
     unit: "",
     permissions: [],
+    us: "",
+    pass: "",
   });
 
   const [availablePermissions, setAvailablePermissions] = useState<any[]>([]);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [emailAccounts, setEmailAccounts] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
     if (visible) {
       fetchPermissions();
+      if (!isEdit) fetchEmailAccounts();
       if (isEdit && user) {
+        const unit = user.unit || user.facility_id || "";
+        let type = user.type || "";
+
+        if (!type && unit) {
+          if (FACILITIES_BV.some((f) => f.id === unit)) type = "BV";
+          else if (FACILITIES_TT.some((f) => f.id === unit)) type = "TT";
+          else if (FACILITIES_BT.some((f) => f.id === unit)) type = "BT";
+          else if (FACILITIES_TYT.some((f) => f.id === unit)) type = "TYT";
+          else if (FACILITIES_CC.some((f) => f.id === unit)) type = "CC";
+        }
+
         setFormData({
           full_name: user.full_name || "",
           email: user.email || "",
           role: user.role || "user",
           status: Number(user.status) as 0 | 1,
-          type: user.type || "",
-          unit: user.unit || user.facility_id || "",
+          type: type,
+          unit: unit,
+          us: user.us || "",
+          pass: user.pass || "",
         });
         const perms = Array.isArray(user.permissions)
           ? user.permissions.map((p: any) => typeof p === 'object' ? p.name : p)
@@ -70,6 +87,8 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
           status: 1,
           type: "",
           unit: "",
+          us: "",
+          pass: "",
         });
         setSelectedPermissions([]);
       }
@@ -83,6 +102,26 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
       setAvailablePermissions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching permissions:", error);
+    }
+  };
+
+  const fetchEmailAccounts = async () => {
+    try {
+      const response = await api.getEmailAccounts();
+      const data = response.emailAccounts || response.data || response;
+      const accounts = Array.isArray(data) ? data : [];
+      setEmailAccounts(accounts);
+
+      // Auto-select first account if present and in Add mode
+      if (accounts.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          us: accounts[0].username,
+          pass: accounts[0].password
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching email accounts:", error);
     }
   };
 
@@ -128,15 +167,16 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
 
     setIsSaving(true);
     try {
+      const { ...restOfFormData } = formData;
       const dataToSubmit = {
-        ...formData,
+        ...restOfFormData,
         permissions: selectedPermissions,
       };
 
       if (isEdit && user) {
         await api.updateUser(user.id, dataToSubmit);
       } else {
-        await api.createUser(dataToSubmit);
+        await api.register(dataToSubmit);
       }
 
       toast.current?.show({
@@ -260,7 +300,6 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
                     />
                   </div>
                 </div>
-
                 {formData.role === "user" && (
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-4 animate-in slide-in-from-top-2">
                     <div>
@@ -304,9 +343,9 @@ const UserModal: React.FC<UserModalProps> = ({ visible, onHide, user, onSaveSucc
             </div>
 
             <div className="space-y-6">
-              <h4 className="font-black text-gray-800 flex items-center gap-2 border-b border-gray-100 pb-2">
+              <h4 className="font-black text-gray-800 flex items-center gap-2 border-b border-gray-100 pb-2 uppercase">
                 <Shield size={18} className="text-primary-600" />
-                PHÂN QUYỀN TRUY CẬP
+                PHÂN QUYỀN TRUY CẬP ({selectedPermissions.length})
               </h4>
 
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 max-h-[400px] overflow-y-auto custom-scrollbar">

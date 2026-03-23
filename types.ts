@@ -72,10 +72,13 @@ export interface User {
   email: string;
   role: "admin" | "user";
   status: 0 | 1;
+  is_verified: boolean;
   type?: string;
   facility_id?: string;
   unit?: string;
   permissions?: any[];
+  us?: string;
+  pass?: string;
 }
 export interface Permission {
   id: number;

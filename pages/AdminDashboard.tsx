@@ -104,7 +104,7 @@ const AdminDashboard = () => {
     confirmDialog({
       message: "Bạn có chắc chắn muốn xóa bài viết này?",
       header: "Xác nhận",
-      icon: Delete,
+      icon: "pi pi-exclamation-triangle",
       accept: async () => {
         try {
           await api.delete(`/posts/${id}`);
@@ -139,7 +139,7 @@ const AdminDashboard = () => {
     <AdminLayout title="Bài viết">
       <Toast ref={toast} />
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all transform hover:-translate-y-1">
           <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
             <FileText size={24} />
           </div>
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
             <h3 className="text-2xl font-black text-gray-800">{totalPosts}</h3>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all transform hover:-translate-y-1">
           <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
             <CheckCircle size={24} />
           </div>
@@ -161,7 +161,7 @@ const AdminDashboard = () => {
             <h3 className="text-2xl font-black text-gray-800">{totalPosts}</h3>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all transform hover:-translate-y-1">
           <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
             <FileEdit size={24} />
           </div>

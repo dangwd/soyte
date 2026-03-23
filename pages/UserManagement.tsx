@@ -7,6 +7,7 @@ import {
   Search,
   Users,
   UserCheck,
+  Plus,
   Shield,
   Edit3,
   Trash2,
@@ -22,7 +23,7 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const toast = useRef<Toast>(null);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -117,8 +118,8 @@ const UserManagement: React.FC = () => {
   return (
     <AdminLayout title="Quản lý Người dùng">
       <Toast ref={toast} />
-      
-      <UserModal 
+
+      <UserModal
         visible={isModalOpen}
         onHide={() => setIsModalOpen(false)}
         user={selectedUser}
@@ -144,11 +145,19 @@ const UserManagement: React.FC = () => {
           value={stats.admins}
           color="amber"
         />
+        <div className="flex flex-col justify-center">
+          <Button
+            onClick={handleOpenAddModal}
+            className="w-full !bg-secondary-600 hover:!bg-secondary-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-secondary-100 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-[10px]"
+          >
+            <Plus size={24} /> THÊM MỚI NGƯỜI DÙNG
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <div className="relative w-full md:w-96">
+          <div className="relative w-full">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
@@ -160,12 +169,6 @@ const UserManagement: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-100 font-medium text-sm"
             />
           </div>
-          <Button
-            label="THÊM MỚI NGƯỜI DÙNG"
-            icon={<Shield size={18} />}
-            onClick={handleOpenAddModal}
-            className="!px-6 !py-2.5 !bg-primary-600 !text-white !font-black !rounded-xl !shadow-lg !shadow-primary-100 !transition-all hover:!-translate-y-0.5"
-          />
         </div>
 
         <div className="overflow-x-auto">
@@ -264,6 +267,19 @@ const UserManagement: React.FC = () => {
                           ? "Hoạt động"
                           : "Vô hiệu hóa"}
                       </span>
+
+                      {user.is_verified === false ? (
+                        <span
+                          className={`inline-flex ml-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-700`}
+                        >
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full bg-red-500`}
+                          ></div>
+
+                          Chưa kích hoạt
+                        </span>
+                      ) : <></>
+                      }
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
@@ -325,7 +341,7 @@ const StatCard: React.FC<StatCardProps> = ({
     amber: "bg-amber-50 text-amber-600",
   };
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-all transform hover:-translate-y-1">
       <div
         className={`w-12 h-12 ${colors[color]} rounded-xl flex items-center justify-center`}
       >
