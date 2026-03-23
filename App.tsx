@@ -15,6 +15,7 @@ import WorkSchedule from "./pages/WorkSchedule";
 import DataLookup from "./pages/DataLookup";
 import PolicyHealthInsurance from "./pages/PolicyHealthInsurance";
 import UserManagement from "./pages/UserManagement";
+import SmtpSettings from "./pages/SmtpSettings";
 import AdminWorkSchedule from "./pages/AdminWorkSchedule";
 import TemplatesManagement from "./pages/TemplatesManagement";
 import TemplateCreate from "./pages/TemplateCreate";
@@ -79,6 +80,7 @@ const App = () => {
         <Route path="/admin" element={<AdminRoute />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="smtp" element={<SmtpSettings />} />
           <Route path="schedules" element={<AdminWorkSchedule />} />{" "}
           <Route path="templates/:type?" element={<TemplatesManagement />} />{" "}
           <Route path="templates/create/:type?" element={<TemplateCreate />} />{" "}

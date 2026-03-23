@@ -38,7 +38,7 @@ export interface DashboardStat {
 export enum FilterTimeRange {
   TODAY = "Hôm nay",
   WEEK = "Tuần này",
-  MONTH = "Tháng này"
+  MONTH = "Tháng này",
 }
 
 export interface ScheduleAttachment {
@@ -58,9 +58,9 @@ export interface WorkSchedule {
   location: string;
   presider_id: number;
   coordinating_unit: string;
-  priority: 'IMPORTANT' | 'NORMAL' | 'LOW';
+  priority: "IMPORTANT" | "NORMAL" | "LOW";
   attendee_ids: number[];
-  status: 'pending' | 'completed' | 'cancelled';
+  status: "pending" | "completed" | "cancelled";
   attachments?: ScheduleAttachment[];
   created_at?: string;
   updated_at?: string;
@@ -86,4 +86,13 @@ export interface Permission {
   description: string;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface SmtpConfig {
+  id?: number;
+  smtp_host: string;
+  smtp_port: number;
+  smtp_secure: boolean;
+  smtp_user: string;
+  smtp_pass: string;
 }

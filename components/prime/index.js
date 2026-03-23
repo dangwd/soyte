@@ -9,6 +9,7 @@ export { RadioButton } from "primereact/radiobutton";
 export { InputNumber } from "primereact/inputnumber";
 export { Password } from "primereact/password"; 
 export { Editor } from "primereact/editor";
+export { InputSwitch } from "primereact/inputswitch";
 // Button
 export { Button } from "primereact/button";
 

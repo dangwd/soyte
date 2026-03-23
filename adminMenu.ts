@@ -8,6 +8,7 @@ import {
   Stethoscope,
   ShieldCheck,
   Lock,
+  Settings,
 } from "lucide-react";
 
 export type MenuChild = {
@@ -39,6 +40,13 @@ export const adminMenu: MenuItem[] = [
     icon: User,
     permission: "users",
     to: "/admin/users",
+  },
+  {
+    key: "smtp",
+    label: "Cấu hình SMTP",
+    icon: Settings,
+    permission: "users",
+    to: "/admin/smtp",
   },
   {
     key: "schedules",
@@ -132,7 +140,7 @@ export const adminMenu: MenuItem[] = [
         key: "report-DCBC",
         label: "Đề cương báo cáo",
         to: "/admin/report/DCBC",
-      }
+      },
     ],
   },
 ];
