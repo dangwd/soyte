@@ -9,7 +9,7 @@ export interface InfoNode {
   value: string;
   type: string;
   status: boolean;
-  isvalidate?: boolean;
+  isValidate?: boolean;
   option: InfoOptionNode[];
   facilityTypeFilter?: string[];
 }
@@ -27,13 +27,13 @@ export interface OptionNode {
   facilityTypeFilter?: string[];
   answerOptions?: { key: number | string; value: string }[];
   status: boolean;
-  isvalidate?: boolean;
+  isValidate?: boolean;
 }
 
 export interface GroupNode {
   name: string;
   status: boolean;
-  isvalidate?: boolean;
+  isValidate?: boolean;
   Roman?: "number" | "roman";
   option: OptionNode[];
 }
