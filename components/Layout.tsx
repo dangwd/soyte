@@ -13,7 +13,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Danh sách các trang không hiển thị Header/Footer chung
   const isSpecialPage = 
-    location.pathname.startsWith('/admin') || 
+    (location.pathname.startsWith('/admin') && !location.pathname.includes('/templates/qr/')) || 
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/register') ||
     location.pathname.startsWith('/confirm-password') ||

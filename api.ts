@@ -173,8 +173,12 @@ export const api = {
     return this.put("/email-confirm", data);
   },
 
-  async confirmPassword(username: string, password: string) {
-    return this.post(`/auth/confirm-password/${username}`, { password });
+  async confirmPassword(data: { email: string; password: string; token: string }) {
+    return this.post("/auth/confirm-password", data);
+  },
+
+  async checkToken(token: string) {
+    return this.get(`/auth/check-token/${token}`);
   },
 
   async forgotPassword(email: string) {

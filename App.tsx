@@ -64,7 +64,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ChangePassword />} />
-        <Route path="/confirm-password/:username" element={<ConfirmPassword />} />
+        <Route path="/confirm-password" element={<ConfirmPassword />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/health-records/detail"

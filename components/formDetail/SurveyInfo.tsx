@@ -128,7 +128,10 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error }) {
     }
   }, [info.type, info.key, fieldKey, value?.value, onChange, selectOptions]);
 
-  const isReadOnly = info.title === "Ngày điền" || info.value === "ngay_ien";
+  const isReadOnly = 
+    info.title?.toLowerCase().includes("ngày điền") || 
+    info.value === "ngay_ien" || 
+    info.key === "ngay_ien";
 
   const renderField = () => {
     switch (info.type) {
@@ -224,7 +227,7 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error }) {
     <div>
       <div className="mb-2 min-h-[48px]">
         <label className="mb-1 block font-medium text-slate-700">
-          {info.title} {info.isValidate !== false && <span className="text-red-500">*</span>}
+          {info.title} {info.isValidate !== false && !isReadOnly && <span className="text-red-500">*</span>}
         </label>
       </div>
       {renderField()}
