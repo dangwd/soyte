@@ -5,7 +5,7 @@ import { api } from "../api";
 import { Button } from "@/components/prime";
 
 const ForgotPassword: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -13,12 +13,12 @@ const ForgotPassword: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username) return;
+    if (!email) return;
 
     setError("");
     setIsLoading(true);
     try {
-      await api.forgotPassword(username);
+      await api.forgotPassword(email);
       setSuccess(true);
     } catch (err: any) {
       console.error(err);
@@ -71,7 +71,7 @@ const ForgotPassword: React.FC = () => {
                 <div className="space-y-2">
                   <h3 className="text-lg font-bold text-gray-800">Yêu cầu đã được gửi!</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu đến email liên kết với tài khoản <span className="font-bold text-primary-600">@{username}</span>.
+                    Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu đến địa chỉ email <span className="font-bold text-primary-600">{email}</span>.
                   </p>
                 </div>
                 <Button 
@@ -84,7 +84,7 @@ const ForgotPassword: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
                   <p className="text-xs text-blue-800 text-center font-medium leading-relaxed">
-                    Vui lòng nhập <span className="font-bold">Tên đăng nhập</span> hoặc <span className="font-bold">Email</span> của bạn. Chúng tôi sẽ gửi một liên kết để thiết lập lại mật khẩu.
+                    Vui lòng nhập <span className="font-bold">Địa chỉ Email</span> của bạn. Chúng tôi sẽ gửi một liên kết để thiết lập lại mật khẩu.
                   </p>
                 </div>
 
@@ -97,15 +97,15 @@ const ForgotPassword: React.FC = () => {
 
                 <div className="space-y-1.5">
                   <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Tên đăng nhập hoặc Email
+                    Địa chỉ Email
                   </label>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all text-sm font-bold"
-                    placeholder="admin@soyte.gov.vn"
+                    placeholder="example@soyte.gov.vn"
                   />
                 </div>
 

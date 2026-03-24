@@ -177,8 +177,8 @@ export const api = {
     return this.post(`/auth/confirm-password/${username}`, { password });
   },
 
-  async forgotPassword(username: string) {
-    return this.post("/auth/forgot-password", { username });
+  async forgotPassword(email: string) {
+    return this.post("/auth/forgot-password", { email });
   },
 
   async changePassword(data: any) {
