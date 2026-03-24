@@ -10,6 +10,7 @@ export interface InfoNode {
   type: string;
   status: boolean;
   isValidate?: boolean;
+  isDisable?: boolean;
   option: InfoOptionNode[];
   facilityTypeFilter?: string[];
 }

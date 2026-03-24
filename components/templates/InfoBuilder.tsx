@@ -53,11 +53,18 @@ export const InfoBuilder: React.FC<InfoBuilderProps> = ({
                   { label: 'Cơ sở y tế (Multi)', value: 'facility_multiselect' },
                 ]} onChange={(e) => updateInfoField(idx, 'type', e.value)} className="w-full bg-white border-slate-300 focus:border-primary-500 shadow-sm flex items-center h-[46px]" />
               </div>
-              <div className="md:col-span-2 flex flex-col items-center">
+              <div className="md:col-span-1 flex flex-col items-center">
                 <label className="block text-slate-700 font-bold mb-3 text-sm">Bắt buộc</label>
                 <InputSwitch
                   checked={field.isValidate || false}
                   onChange={(e) => updateInfoField(idx, 'isValidate', e.value)}
+                />
+              </div>
+              <div className="md:col-span-1 flex flex-col items-center">
+                <label className="block text-slate-700 font-bold mb-3 text-sm">Vô hiệu</label>
+                <InputSwitch
+                  checked={field.isDisable || false}
+                  onChange={(e) => updateInfoField(idx, 'isDisable', e.value)}
                 />
               </div>
               <div className="md:col-span-1 flex flex-col items-center">

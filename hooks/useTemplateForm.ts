@@ -271,7 +271,7 @@ export const useTemplateForm = (
       : 1;
     setTemplate((prev) => ({
       ...prev,
-      info: [...(prev.info || []), { key: nextKey, title: "", value: "", type: "text", status: true, option: [] }]
+      info: [...(prev.info || []), { key: nextKey, title: "", value: "", type: "text", status: true, isValidate: false, isDisable: false, option: [] }]
     }));
   };
 
