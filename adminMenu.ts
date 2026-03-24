@@ -141,6 +141,11 @@ export const adminMenu: MenuItem[] = [
         label: "Đề cương báo cáo",
         to: "/admin/report/DCBC",
       },
+      {
+        key: "report-KSHL",
+        label: "Khảo sát, đánh giá sự hài lòng của người bệnh (demo)",
+        to: "/admin/report/KSHL"
+      }
     ],
   },
 ];
