@@ -8,6 +8,7 @@ import { FeedbackItem } from '@/types/feedbacks';
 
 export const exportReportToWord = async (
     groupedFeedbacks: Record<string, { title: string, items: FeedbackItem[] }>,
+    formTemplates: Record<string, any>,
     dateFilter: { startDate: string, endDate: string },
     setLoading: (val: boolean) => void,
     onSuccess: (msg: string) => void,
@@ -19,10 +20,24 @@ export const exportReportToWord = async (
         const mainRomanNumerals = ["I", "II", "III", "IV", "V"];
 
         const formEntries = Object.entries(groupedFeedbacks) as [string, { title: string, items: FeedbackItem[] }][];
-
         const children: any[] = [];
 
-        // Headers
+        const mkCell = (text: string, bold = false, align: any = AlignmentType.LEFT, colSpan = 1, rowSpan = 1) => {
+            const textRuns = text.split('\n').map((t, idx, arr) => {
+                if (idx < arr.length - 1) return [new TextRun({ text: t, font: "Times New Roman", size: 22, bold }), new TextRun({ break: 1 })];
+                return [new TextRun({ text: t, font: "Times New Roman", size: 22, bold })];
+            }).flat();
+
+            return new TableCell({
+                columnSpan: colSpan,
+                rowSpan: rowSpan,
+                margins: { top: 100, bottom: 100, left: 100, right: 100 },
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: align, children: textRuns })]
+            });
+        };
+
+        // ... existing header/title logic ...
         const createHeader = () => {
             const now = new Date();
             return new Table({
@@ -70,8 +85,8 @@ export const exportReportToWord = async (
             const [formId, group] = formEntries[i];
             if (formId === 'unknown') continue;
 
-            const tplRes = await formService.fetchFormById(formId);
-            const formTemplate = tplRes.data || tplRes;
+            const formTemplate = formTemplates[formId];
+            if (!formTemplate) continue;
 
             let totalUnits = 0;
             const infoSource = formTemplate.info || formTemplate.data?.info;
@@ -114,6 +129,7 @@ export const exportReportToWord = async (
                 onTimeCount = reportedCount;
             }
 
+            // ... rest of the logic ...
             // Mục lớn
             children.push(new Paragraph({
                 spacing: { after: 200 },
@@ -130,20 +146,8 @@ export const exportReportToWord = async (
                 children: [new TextRun({ text: `Tổng số: ${totalUnits} đơn vị.`, font: "Times New Roman", size: 22 })]
             }));
 
-            const mkCell = (text: string, bold = false, align: any = AlignmentType.LEFT, colSpan = 1, rowSpan = 1) => {
-                const textRuns = text.split('\n').map((t, idx, arr) => {
-                    if (idx < arr.length - 1) return [new TextRun({ text: t, font: "Times New Roman", size: 22, bold }), new TextRun({ break: 1 })];
-                    return [new TextRun({ text: t, font: "Times New Roman", size: 22, bold })];
-                }).flat();
+            // Logic removed and moved up
 
-                return new TableCell({
-                    columnSpan: colSpan,
-                    rowSpan: rowSpan,
-                    margins: { top: 100, bottom: 100, left: 100, right: 100 },
-                    verticalAlign: VerticalAlign.CENTER,
-                    children: [new Paragraph({ alignment: align, children: textRuns })]
-                });
-            };
 
             // Bảng 1
             children.push(new Table({
@@ -177,13 +181,9 @@ export const exportReportToWord = async (
             }));
 
             if (reportedCount > 0) {
-                const detailedPromises = group.items.map(async (fb) => {
-                    const id = fb.id || fb._id;
-                    const res = await feedBacksSevice.fetchFeedBackById(id);
-                    const d = res.data || res;
-                    return d.data || d;
-                });
-                const detailedFeedbacks = await Promise.all(detailedPromises);
+                // Sử dụng group.items có sẵn chi tiết, không gọi API
+                const detailedFeedbacks = group.items;
+
 
                 if (detailedFeedbacks[0]?.sections) {
                     const templateSections = detailedFeedbacks[0].sections;
@@ -266,6 +266,89 @@ export const exportReportToWord = async (
                 }
             }
         } // End of loop
+        
+        // --- PHỤ LỤC: Danh sách đơn vị ---
+        children.push(new Paragraph({
+            spacing: { before: 400, after: 200 },
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: "PHỤ LỤC", font: "Times New Roman", size: 28, bold: true })]
+        }));
+        
+        children.push(new Paragraph({
+            spacing: { after: 400 },
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: "Danh mục các đơn vị đã thực hiện báo cáo trong kỳ", font: "Times New Roman", size: 22, italics: true })]
+        }));
+
+        const getUnitName = (item: FeedbackItem) => {
+            if (item.info) {
+                const candidateKeys = Object.entries(item.info)
+                    .filter(([k]) => !isNaN(Number(k)))
+                    .map(([_, v]: [string, any]) =>
+                        (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
+                            ? String(v.value.key) : null
+                    )
+                    .filter((k): k is string => !!k);
+                for (const key of candidateKeys) {
+                    const facility = ALL_FACILITIES.find((f: any) => f.id === key);
+                    if (facility) return facility.name;
+                }
+                const firstMatchedField = Object.entries(item.info)
+                    .filter(([k]) => !isNaN(Number(k)))
+                    .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
+                if (firstMatchedField) return String((firstMatchedField[1] as any).value.value);
+            }
+            return item.fullName || item.name || 'Chưa xác định';
+        };
+
+        const appendixRoman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+        const appendixRows: TableRow[] = [];
+        
+        // Header của Phụ lục
+        appendixRows.push(new TableRow({
+            children: [
+                mkCell('STT', true, AlignmentType.CENTER),
+                mkCell('Tên đơn vị tham gia báo cáo', true, AlignmentType.CENTER)
+            ]
+        }));
+
+        const sortedEntries = Object.entries(groupedFeedbacks).sort((a, b) => {
+            const order: Record<string, number> = { "3": 1, "17": 2, "18": 3 };
+            return (order[a[0]] || 99) - (order[b[0]] || 99);
+        });
+
+        sortedEntries.forEach(([formId, group]: [string, any], gi) => {
+            // Dòng nhóm (I, II, III...)
+            appendixRows.push(new TableRow({
+                children: [
+                    new TableCell({
+                        shading: { fill: "F2F2F2" },
+                        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: appendixRoman[gi] || String(gi + 1), bold: true, font: "Times New Roman" })] })]
+                    }),
+                    new TableCell({
+                        shading: { fill: "F2F2F2" },
+                        children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: group.title, bold: true, italics: true, font: "Times New Roman" })] })]
+                    })
+                ]
+            }));
+
+            // Danh sách đơn vị trong nhóm
+            group.items.forEach((fb: any, ii: number) => {
+                appendixRows.push(new TableRow({
+                    children: [
+                        mkCell(String(ii + 1), false, AlignmentType.CENTER),
+                        mkCell(getUnitName(fb))
+                    ]
+                }));
+            });
+        });
+
+        children.push(new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: appendixRows
+        }));
+        
+        children.push(new Paragraph({ spacing: { before: 400, after: 400 }, children: [] })); // Khoảng cách tới chữ ký
 
         // Footer (Chữ ký)
         const footerTable = new Table({

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { feedBacksSevice } from '@/services/feedBacksSevice';
 import { formService } from '@/services/formService';
 import { FeedbackItem } from '@/types/feedbacks';
 import { ALL_FACILITIES } from '@/constants';
@@ -9,12 +8,18 @@ interface ReportTabContentProps {
     feedbacks: FeedbackItem[];
     dateFilter: { startDate: string, endDate: string };
     filterType: string;
+    totalUnits?: number;
+    formTemplate?: any; // Nhận template đã fetch từ cha
 }
 
-export const ReportTabContent: React.FC<ReportTabContentProps> = ({ formId, feedbacks, dateFilter, filterType }) => {
-    const [loading, setLoading] = useState(false);
+export const ReportTabContent: React.FC<ReportTabContentProps> = ({
+    formId,
+    feedbacks,
+    dateFilter,
+    formTemplate: propTemplate
+}) => {
     const [detailedFeedbacks, setDetailedFeedbacks] = useState<any[]>([]);
-    const [formTemplate, setFormTemplate] = useState<any>(null);
+    const [formTemplate, setFormTemplate] = useState<any>(propTemplate || null);
     // const [isDetailedTableExpanded, setIsDetailedTableExpanded] = useState(true);
     const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
 
@@ -103,41 +108,19 @@ export const ReportTabContent: React.FC<ReportTabContentProps> = ({ formId, feed
         ];
     }, [feedbacks, totalUnits, formTemplate]);
     useEffect(() => {
-        const fetchDetailsAndTemplate = async () => {
-            setLoading(true);
-            try {
-                // Lấy metadata của biểu mẫu để tính tổng số đơn vị
-                if (formId && formId !== 'unknown') {
-                    const tplRes = await formService.fetchFormById(formId);
-                    const tplData = tplRes.data || tplRes;
-                    setFormTemplate(tplData);
-                }
+        // Luôn cập nhật template khi dữ liệu từ cha (propTemplate) thay đổi
+        if (propTemplate) {
+            setFormTemplate(propTemplate);
+        }
+    }, [propTemplate]);
 
-                // Lấy chi tiết cho tất cả phản hồi trong tab này để lấy dữ liệu 'sections'
-                if (feedbacks.length > 0) {
-                    const promises = feedbacks.map(async (fb) => {
-                        const id = fb.id || fb._id;
-                        if (!id) return null;
-                        const response = await feedBacksSevice.fetchFeedBackById(id);
-                        const data = response.data || response;
-                        const fbData = data.data || data;
-                        return fbData;
-                    });
+    // Trạng thái loading cho riêng phần biểu mẫu nếu dữ liệu từ cha chưa về kịp
+    const isTemplateLoading = !formTemplate && formId && formId !== 'unknown';
 
-                    const results = await Promise.all(promises);
-                    setDetailedFeedbacks(results.filter(r => r !== null));
-                } else {
-                    setDetailedFeedbacks([]);
-                }
-            } catch (error) {
-                console.error("Error fetching detailed feedbacks and template:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDetailsAndTemplate();
-    }, [feedbacks, formId]);
+    useEffect(() => {
+        // Cập nhật chi tiết khi feedbacks từ cha truyền xuống thay đổi
+        setDetailedFeedbacks(feedbacks || []);
+    }, [feedbacks]);
 
     // Tổng hợp dữ liệu từ các section để xây dựng Bảng 2
     // Đếm số lượng đơn vị đã làm, đang làm, chưa làm cho mỗi nội dung kiểm tra
@@ -238,10 +221,10 @@ export const ReportTabContent: React.FC<ReportTabContentProps> = ({ formId, feed
                 </div>
 
                 <div className="overflow-x-auto p-6 animate-in slide-in-from-top-2 duration-300">
-                    {loading ? (
+                    {isTemplateLoading ? (
                         <div className="flex justify-center items-center py-10">
                             <i className="pi pi-spin pi-spinner text-3xl text-primary-500"></i>
-                            <span className="ml-3 text-slate-500">Đang tải chi tiết báo cáo...</span>
+                            <span className="ml-3 text-slate-500">Đang tải chi tiết biểu mẫu...</span>
                         </div>
                     ) : aggregatedChecks.length > 0 ? (
                         <table className="w-full border-collapse border border-slate-300">

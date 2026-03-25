@@ -9,6 +9,7 @@ import { FeedbackItem } from '@/types/feedbacks'
 
 export const exportReportToPDF = async (
     groupedFeedbacks: Record<string, { title: string, items: FeedbackItem[] }>,
+    formTemplates: Record<string, any>,
     dateFilter: { startDate: string, endDate: string },
     setLoading: (val: boolean) => void,
     onSuccess: (msg: string) => void,
@@ -18,7 +19,7 @@ export const exportReportToPDF = async (
     try {
         const doc = new jsPDF();
 
-        // Đăng ký font Times New Roman hỗ trợ tiếng Việt (tuân thủ tốt jsPDF parser)
+        // ... existing font setup ...
         doc.addFileToVFS('times.ttf', TIMES_REGULAR_BASE64);
         doc.addFont('times.ttf', 'TimesNewRoman', 'normal', 'Identity-H');
         doc.addFileToVFS('timesbd.ttf', TIMES_BOLD_BASE64);
@@ -56,7 +57,7 @@ export const exportReportToPDF = async (
         doc.text('ĐỀ CƯƠNG BÁO CÁO', 105, 45, { align: 'center' });
 
         let currentY = 55;
-        const mainRomanNumerals = ["I", "II", "III", "IV", "V"]; // Đánh số La Mã cho mục lớn
+        const mainRomanNumerals = ["I", "II", "III", "IV", "V"];
 
         // --- Duyệt qua từng nhóm để vẽ nội dung ---
         const formEntries = Object.entries(groupedFeedbacks) as [string, { title: string, items: FeedbackItem[] }][];
@@ -65,9 +66,9 @@ export const exportReportToPDF = async (
             const [formId, group] = formEntries[i];
             if (formId === 'unknown') continue;
 
-            // --- Phần logic tính toán totalUnits, onTimeCount, lateCount ---
-            const tplRes = await formService.fetchFormById(formId);
-            const formTemplate = tplRes.data || tplRes;
+            // Sử dụng template đã truyền vào từ báo cáo, không gọi API nữa
+            const formTemplate = formTemplates[formId];
+            if (!formTemplate) continue;
 
             let totalUnits = 0;
             const infoSource = formTemplate.info || formTemplate.data?.info;
@@ -110,7 +111,7 @@ export const exportReportToPDF = async (
                 onTimeCount = reportedCount;
             }
 
-            if (currentY > 240) { doc.addPage(); currentY = 25; drawHeader(doc); currentY = 40; }
+            if (currentY > 240) { doc.addPage(); currentY = 20; }
 
             // Tiêu đề mục lớn (I, II, III...)
             doc.setFont(FONT, 'bold');
@@ -159,13 +160,9 @@ export const exportReportToPDF = async (
 
             // --- Table 2: Chi tiết nội dung đánh giá ---
             if (reportedCount > 0) {
-                const detailedPromises = group.items.map(async (fb) => {
-                    const id = fb.id || fb._id;
-                    const res = await feedBacksSevice.fetchFeedBackById(id);
-                    const d = res.data || res;
-                    return d.data || d;
-                });
-                const detailedFeedbacks = await Promise.all(detailedPromises);
+                // Sử dụng dữ liệu group.items đã có sẵn chi tiết (sections), không gọi lại fetchById
+                const detailedFeedbacks = group.items;
+
 
                 if (detailedFeedbacks[0]?.sections) {
                     const templateSections = detailedFeedbacks[0].sections;
@@ -219,7 +216,7 @@ export const exportReportToPDF = async (
                         table2Body.push(...optionRows);
                     });
 
-                    if (currentY > 230) { doc.addPage(); currentY = 25; drawHeader(doc); currentY = 40; }
+                    if (currentY > 230) { doc.addPage(); currentY = 20; }
 
                     autoTable(doc, {
                         startY: currentY,
@@ -256,9 +253,75 @@ export const exportReportToPDF = async (
             }
         }
 
+        // --- Phụ lục: Danh sách đơn vị tham gia báo cáo ---
+        doc.addPage();
+        currentY = 20;
+
+        doc.setFontSize(14);
+        doc.setFont(FONT, 'bold');
+        doc.text('PHỤ LỤC', 105, currentY, { align: 'center' });
+        currentY += 7;
+        doc.setFontSize(11);
+        doc.setFont(FONT, 'normal');
+        doc.text('Danh sách các đơn vị đã gửi báo cáo', 105, currentY, { align: 'center' });
+        currentY += 10;
+
+        const getUnitName = (item: FeedbackItem) => {
+            if (item.info) {
+                const candidateKeys = Object.entries(item.info)
+                    .filter(([k]) => !isNaN(Number(k)))
+                    .map(([_, v]: [string, any]) =>
+                        (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
+                            ? String(v.value.key) : null
+                    )
+                    .filter((k): k is string => !!k);
+                for (const key of candidateKeys) {
+                    const facility = ALL_FACILITIES.find((f: any) => f.id === key);
+                    if (facility) return facility.name;
+                }
+                const firstMatchedField = Object.entries(item.info)
+                    .filter(([k]) => !isNaN(Number(k)))
+                    .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
+                if (firstMatchedField) return String((firstMatchedField[1] as any).value.value);
+            }
+            return item.fullName || item.name || 'Chưa xác định';
+        };
+
+        const appendixRoman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+        const appendixBody: any[] = [];
+        const sortedEntries = Object.entries(groupedFeedbacks).sort((a, b) => {
+            const order: Record<string, number> = { "3": 1, "17": 2, "18": 3 };
+            return (order[a[0]] || 99) - (order[b[0]] || 99);
+        });
+
+        sortedEntries.forEach(([formId, group]: [string, any], gi) => {
+            appendixBody.push([
+                { content: appendixRoman[gi] || gi + 1, styles: { halign: 'center', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                { content: group.title, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }
+            ]);
+            group.items.forEach((fb: any, ii: number) => {
+                appendixBody.push([
+                    { content: ii + 1, styles: { halign: 'center' } },
+                    getUnitName(fb)
+                ]);
+            });
+        });
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [['STT', 'Tên đơn vị báo cáo']],
+            body: appendixBody,
+            styles: { font: FONT, fontSize: 11, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+            headStyles: { font: FONT, fontStyle: 'bold', fillColor: [255, 255, 255], textColor: [0, 0, 0], halign: 'center' },
+            columnStyles: { 0: { halign: 'center', cellWidth: 20 } },
+            theme: 'grid'
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
         // --- Footer: Chữ ký cuối cùng ---
-        if (currentY > 260) { doc.addPage(); currentY = 25; drawHeader(doc); currentY = 40; }
-        const footerY = currentY + 10;
+        if (currentY > 230) { doc.addPage(); currentY = 20; }
+        const footerY = currentY + 15;
         doc.setFontSize(11);
         doc.setFont(FONT, 'bold');
         doc.text('NGƯỜI LẬP BIỂU', 50, footerY, { align: 'center' });

@@ -1,6 +1,7 @@
 import AdminLayout from '@/components/AdminLayout'
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { feedBacksSevice } from '@/services/feedBacksSevice'
+import { formService } from '@/services/formService'
 import { ReportTabContent } from '@/components/feedbacks/ReportTabContent'
 import { FeedbackFilters } from '@/components/feedbacks/FeedbackFilters'
 import { Button, Toast } from '@/components/prime'
@@ -9,10 +10,14 @@ import { FeedbackItem } from '@/types/feedbacks'
 import { formatDateVN, getDefaultDates } from '@/utils/dateUtils'
 import { exportReportToPDF } from '@/utils/pdfExport'
 import { exportReportToWord } from '@/utils/wordExport'
+import { ReportAppendix } from '@/components/feedbacks/ReportAppendix'
 
 const Report_DCBC = () => {
     const toast = useRef<Toast>(null);
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+    const [formTemplates, setFormTemplates] = useState<Record<string, any>>({});
+    const fetchedTemplatesRef = useRef<Set<string>>(new Set());
+    const loadingTemplatesRef = useRef<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
 
     // Bộ lọc
@@ -121,10 +126,40 @@ const Report_DCBC = () => {
         return groups;
     }, [feedbacks]);
 
+    // Tự động tải template cho tất cả các form có trong dữ liệu báo cáo
+    useEffect(() => {
+        const fetchTemplates = async () => {
+            const formIds = Object.keys(groupedFeedbacks).filter(id => id !== 'unknown');
+
+            for (const id of formIds) {
+                // Chỉ fetch nếu chưa có trong cache và chưa đang loading
+                if (!fetchedTemplatesRef.current.has(id) && !loadingTemplatesRef.current.has(id)) {
+                    loadingTemplatesRef.current.add(id);
+                    try {
+                        const res = await formService.fetchFormById(id);
+                        const tplData = res.data || res;
+
+                        setFormTemplates(prev => ({ ...prev, [id]: tplData }));
+                        fetchedTemplatesRef.current.add(id);
+                    } catch (err) {
+                        console.error(`Error fetching template ${id}:`, err);
+                    } finally {
+                        loadingTemplatesRef.current.delete(id);
+                    }
+                }
+            }
+        };
+
+        if (Object.keys(groupedFeedbacks).length > 0) {
+            fetchTemplates();
+        }
+    }, [groupedFeedbacks]);
+
     // Hàm xuất PDF
     const exportToPDF = async () => {
         await exportReportToPDF(
             groupedFeedbacks,
+            formTemplates,
             dateFilter,
             setLoading,
             (msg) => toast.current?.show({ severity: 'success', summary: 'Thành công', detail: msg }),
@@ -136,6 +171,7 @@ const Report_DCBC = () => {
     const exportToWord = async () => {
         await exportReportToWord(
             groupedFeedbacks,
+            formTemplates,
             dateFilter,
             setLoading,
             (msg) => toast.current?.show({ severity: 'success', summary: 'Thành công', detail: msg }),
@@ -191,29 +227,35 @@ const Report_DCBC = () => {
                         <span className="ml-3 text-lg font-medium text-slate-600">Đang tải dữ liệu tổng hợp...</span>
                     </div>
                 ) : Object.keys(groupedFeedbacks).length > 0 ? (
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                        <TabView className="styled-tabview" scrollable>
-                            {Object.entries(groupedFeedbacks).map(([formId, group]: [string, any]) => (
-                                <TabPanel
-                                    key={formId}
-                                    header={
-                                        <span title={group.title} className="block font-semibold">
-                                            {group.title}
-                                        </span>
-                                    }
-                                >
-                                    <div className="p-4 md:p-6 bg-slate-50 min-h-[50vh]">
-                                        <ReportTabContent
-                                            formId={formId}
-                                            feedbacks={group.items}
-                                            dateFilter={dateFilter}
-                                            filterType={filterType}
-                                        />
-                                    </div>
-                                </TabPanel>
-                            ))}
-                        </TabView>
-                    </div>
+                    <>
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <TabView className="styled-tabview" scrollable>
+                                {Object.entries(groupedFeedbacks).map(([formId, group]: [string, any]) => (
+                                    <TabPanel
+                                        key={formId}
+                                        header={
+                                            <span title={group.title} className="block font-semibold">
+                                                {group.title}
+                                            </span>
+                                        }
+                                    >
+                                        <div className="p-4 md:p-6 bg-slate-50 min-h-[50vh]">
+                                            <ReportTabContent
+                                                formId={formId}
+                                                feedbacks={group.items}
+                                                dateFilter={dateFilter}
+                                                filterType={filterType}
+                                                formTemplate={formTemplates[formId]}
+                                            />
+                                        </div>
+                                    </TabPanel>
+                                ))}
+                            </TabView>
+                        </div>
+
+                        {/* Phụ lục danh sách các đơn vị */}
+                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} />
+                    </>
                 ) : (
                     <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100">
                         <div className="inline-flex w-20 h-20 bg-slate-50 items-center justify-center rounded-full mb-4">

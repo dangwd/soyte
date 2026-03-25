@@ -58,7 +58,6 @@ export const FeedbackDetailsDialog: React.FC<FeedbackDetailsDialogProps> = ({
   infoLabels,
   type
 }) => {
-  console.log(selectedFeedback)
   return (
     <Dialog
       header="Chi tiết phiếu đã điền"
@@ -181,7 +180,7 @@ export const FeedbackDetailsDialog: React.FC<FeedbackDetailsDialogProps> = ({
                                   <td className="border border-slate-300 p-3 text-sm leading-relaxed"><div className="whitespace-pre-wrap">{opt.content}</div></td>
                                   <td className="border border-slate-300 p-3 text-sm leading-relaxed"><div className="whitespace-pre-wrap">{opt.method}</div></td>
                                   <td className="border border-slate-300 p-3 text-sm leading-relaxed"><div className="whitespace-pre-wrap">{opt.productOut}</div></td>
-                                  
+
                                   <td className="border border-slate-300 p-2 text-center bg-slate-50/30">
                                     <div className="flex justify-center">
                                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${Number(opt.tiendo) === 1 ? 'bg-primary-600 border-primary-600' : 'bg-white border-slate-300'}`}>
@@ -218,7 +217,7 @@ export const FeedbackDetailsDialog: React.FC<FeedbackDetailsDialogProps> = ({
                                       </div>
                                     </div>
                                   </td>
-                                  
+
                                   <td className="border border-slate-200 p-3 text-sm leading-relaxed"><div className="whitespace-pre-wrap">{opt.ghichu}</div></td>
                                 </tr>
                               );
