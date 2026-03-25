@@ -13,26 +13,35 @@ import {
 } from "lucide-react";
 import { api } from "../api";
 import { Dropdown, Button } from "@/components/prime";
+import { FACILITIES_BT, FACILITIES_BV, FACILITIES_CC, FACILITIES_TT, FACILITIES_TYT } from "@/constants";
 const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    unit: "",
-  });
+   const [formData, setFormData] = useState<any>({
+     full_name: "",
+     email: "",
+     password: "",
+     role: "user",
+     status: 0,
+     type: "",
+     unit: "",
+     permissions: [],
+     us: "",
+     pass: "",
+   });
   const navigate = useNavigate();
-  const unitOptions = [
-    { label: "Văn phòng Sở", value: "VP" },
-    { label: "Phòng Nghiệp vụ Y", value: "NVY" },
-    { label: "Phòng Nghiệp vụ Dược", value: "NVD" },
-    { label: "Phòng Kế hoạch - Tài chính", value: "KHTC" },
-    { label: "Đơn vị sự nghiệp (Bệnh viện)", value: "BV" },
-  ];
+  const getFacilityOptions = (type: string) => {
+      switch (type) {
+        case "BV": return FACILITIES_BV.map(f => ({ label: f.name, value: f.id }));
+        case "TT": return FACILITIES_TT.map(f => ({ label: f.name, value: f.id }));
+        case "BT": return FACILITIES_BT.map(f => ({ label: f.name, value: f.id }));
+        case "TYT": return FACILITIES_TYT.map(f => ({ label: f.name, value: f.id }));
+        case "CC": return FACILITIES_CC.map(f => ({ label: f.name, value: f.id }));
+        default: return [];
+      }
+    };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +62,11 @@ const Register: React.FC = () => {
         password: formData.password,
         unit: formData.unit,
         role: "user",
+        status: 0,
+        type: formData.type,
+        us: "",
+        pass: "",
+        permissions: [],
       });
       setSuccessMessage(
         "Đăng ký tài khoản thành công! Vui lòng chờ quản trị viên phê duyệt.",
@@ -180,28 +194,6 @@ const Register: React.FC = () => {
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">
-                  Đơn vị công tác
-                </label>
-                <div className="relative">
-                  <Building2
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <Dropdown
-                    value={formData.unit}
-                    options={unitOptions}
-                    onChange={(e) =>
-                      setFormData({ ...formData, unit: e.value })
-                    }
-                    placeholder="-- Chọn đơn vị --"
-                    className="w-full" 
-                    required
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">
                   Mật khẩu
@@ -219,7 +211,9 @@ const Register: React.FC = () => {
                   />
                   <Button
                     type="button"
-                    icon={showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    icon={
+                      showPassword ? <EyeOff size={18} /> : <Eye size={18} />
+                    }
                     text
                     rounded
                     onClick={() => setShowPassword(!showPassword)}
@@ -247,7 +241,49 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
+            {formData.role === "user" && (
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-4 animate-in slide-in-from-top-2">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">
+                    Loại hình cơ sở <span className="text-red-500">*</span>
+                  </label>
+                  <Dropdown
+                    value={formData.type}
+                    options={[
+                      { label: "Bệnh viện", value: "BV" },
+                      { label: "Trung tâm y tế", value: "TT" },
+                      { label: "Bảo trợ xã hội", value: "BT" },
+                      { label: "Trạm y tế", value: "TYT" },
+                    ]}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.value, unit: "" })
+                    }
+                    placeholder="-- Chọn loại hình --"
+                    className="w-full !bg-white !border-gray-200 !rounded-xl outline-none font-bold text-gray-700"
+                  />
+                </div>
 
+                {formData.type && (
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">
+                      Đơn vị công tác <span className="text-red-500">*</span>
+                    </label>
+                    <Dropdown
+                      value={formData.unit}
+                      options={getFacilityOptions(formData.type)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, unit: e.value })
+                      }
+                      placeholder="-- Chọn đơn vị --"
+                      filter
+                      filterPlaceholder="Tìm kiếm tên đơn vị..."
+                      virtualScrollerOptions={{ itemSize: 38 }}
+                      className="w-full !bg-white !border-gray-200 !rounded-xl outline-none font-bold text-gray-700"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="pt-4">
               <Button
                 type="submit"
