@@ -172,13 +172,20 @@ export const exportTCT01ToPDF = async (
         doc.setFontSize(12);
         doc.text("TỔ TRƯỞNG", 150, currentY, { align: "center" });
 
+        // Tự động chuyển trang nếu không đủ chỗ cho tiêu đề Phụ lục
+        currentY += 60; // Tăng khoảng cách sau chữ ký
+        if (currentY > 260) {
+            doc.addPage();
+            currentY = 25;
+        }
+
         // 8. PHỤ LỤC
-        doc.addPage();
         doc.setFont(FONT_BOLD);
         doc.setFontSize(14);
-        doc.text("PHỤ LỤC", 105, 20, { align: "center" });
+        doc.text("PHỤ LỤC", 105, currentY, { align: "center" });
+        currentY += 9;
         doc.setFontSize(12);
-        doc.text("Danh sách các đơn vị đã gửi báo cáo", 105, 28, { align: "center" });
+        doc.text("DANH SÁCH CÁC ĐƠN VỊ ĐÃ THỰC HIỆN BÁO CÁO", 105, currentY, { align: "center" });
 
         const romanNums = ["I", "II", "III", "IV", "V"];
         const phuLucBody: any[] = [];
@@ -191,9 +198,9 @@ export const exportTCT01ToPDF = async (
                 phuLucBody.push([{ content: i + 1, styles: { halign: 'center' } }, ten]);
             });
         });
-
+        currentY += 7;
         autoTable(doc, {
-            startY: 35,
+            startY: currentY,
             head: [['STT', 'Tên đơn vị']],
             body: phuLucBody,
             theme: 'grid',

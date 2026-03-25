@@ -8,7 +8,7 @@ interface ReportAppendixProps {
 
 export const ReportAppendix: React.FC<ReportAppendixProps> = ({ groupedFeedbacks }) => {
     const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
-    
+
     const sortedEntries = Object.entries(groupedFeedbacks).sort((a, b) => {
         const order: Record<string, number> = { "3": 1, "17": 2, "18": 3 };
         return (order[a[0]] || 99) - (order[b[0]] || 99);
@@ -48,7 +48,7 @@ export const ReportAppendix: React.FC<ReportAppendixProps> = ({ groupedFeedbacks
                     <p className="text-sm text-slate-500 mt-0.5 italic">Danh mục các đơn vị đã thực hiện báo cáo trong kỳ</p>
                 </div>
             </div>
-            
+
             <div className="p-6 md:p-8 overflow-x-auto bg-slate-50/10">
                 <table className="w-full border-collapse border border-slate-400 bg-white">
                     <thead className="bg-primary-900 text-white">

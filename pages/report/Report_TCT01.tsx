@@ -135,9 +135,31 @@ const Report_TCT01 = () => {
 
             if (reportedCount > 0) {
                 const facilityNames: string[] = items.map(fb => {
+                    if (fb.info) {
+                        const candidateKeys = Object.entries(fb.info)
+                            .filter(([k]) => !isNaN(Number(k)))
+                            .map(([_, v]: [string, any]) =>
+                                (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
+                                    ? String(v.value.key) : null
+                            )
+                            .filter((k): k is string => !!k);
+
+                        for (const key of candidateKeys) {
+                            const facility = ALL_FACILITIES.find((f: any) => String(f.id) === String(key));
+                            if (facility) return facility.name;
+                        }
+
+                        const firstMatchedField = Object.entries(fb.info)
+                            .filter(([k]) => !isNaN(Number(k)))
+                            .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
+
+                        if (firstMatchedField) {
+                            return String((firstMatchedField[1] as any).value.value);
+                        }
+                    }
                     const facilityId = fb.info?.facility_id || fb.facility_id;
-                    const facility = ALL_FACILITIES.find((f: any) => f.id === facilityId);
-                    return facility ? facility.name : `Đơn vị (${facilityId})`;
+                    const facility = ALL_FACILITIES.find((f: any) => String(f.id) === String(facilityId));
+                    return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
                 });
                 data.phuLuc.push({
                     nhom: cat.nhom,
@@ -177,7 +199,7 @@ const Report_TCT01 = () => {
     );
 
     return (
-        <AdminLayout title="Báo cáo" subtitle="Báo cáo kết quả triển khai Tổ công tác số 01">
+        <AdminLayout title="Báo cáo kết quả thực hiện" subtitle="Kết quả thực hiện của Tổ công tác số 01">
             <Toast ref={toast} />
 
             <div className="space-y-6">

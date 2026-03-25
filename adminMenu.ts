@@ -148,7 +148,7 @@ export const adminMenu: MenuItem[] = [
       },
       {
         key: "report-TCT01",
-        label: "Kết quả thực hiện của Tổ công tác số 01",
+        label: "Phản ánh y tế - Kết quả thực hiện",
         to: "/admin/report/TCT01"
       }
     ],
