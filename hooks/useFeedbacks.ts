@@ -4,7 +4,7 @@ import { formService } from '../services/formService';
 import { Toast } from 'primereact/toast';
 import { FeedbackItem } from '../types/feedbacks';
 
-export const useFeedbacks = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string) => {
+export const useFeedbacks = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string | string[]) => {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);

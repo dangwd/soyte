@@ -142,4 +142,68 @@
 
 .survey-form-table .p-checkbox .p-checkbox-box svg path {
   fill: currentColor !important;
+
 }
+
+/* ── Survey MultiSelect Panel ── */
+.survey-ms-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.survey-ms-panel .p-multiselect-header {
+  padding: 12px 14px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Tăng kích thước và khoảng cách cho ô search */
+.survey-ms-panel .p-multiselect-filter-container {
+  flex: 1 !important;
+  position: relative !important;
+}
+
+.survey-ms-panel .p-multiselect-filter-container .p-inputtext {
+  width: 100% !important;
+  height: 40px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 8px 12px 8px 36px !important; /* Padding left để tránh đè icon */
+  font-size: 14px !important;
+}
+
+/* Icon search */
+.survey-ms-panel .p-multiselect-filter-icon {
+  left: 12px !important;
+  color: #64748b !important;
+}
+
+
+.survey-ms-panel .p-multiselect-item {
+  padding: 8px 12px !important;
+  gap: 10px !important;
+}
+
+.survey-ms-panel .p-checkbox .p-checkbox-box {
+  border: 2px solid #94a3b8 !important; /* Viền rõ hơn khi chưa tích */
+  border-radius: 4px !important;
+  background: #ffffff !important;
+}
+
+.survey-ms-panel .p-checkbox .p-checkbox-box[data-p-highlight="true"] {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Fix vertical alignment for labels in MultiSelect */
+.p-multiselect.h-\[48px\] .p-multiselect-label {
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+

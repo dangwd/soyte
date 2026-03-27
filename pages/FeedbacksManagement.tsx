@@ -27,7 +27,7 @@ const FeedbacksManagement: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<{ startDate: string, endDate: string }>(getDefaultDates());
   const [filterType, setFilterType] = useState<string>("this_year");
   const [surveys, setSurveys] = useState<any[]>([]);
-  const [selectedSurveyKey, setSelectedSurveyKey] = useState<string>("");
+  const [selectedSurveyKeys, setSelectedSurveyKeys] = useState<string[]>([]);
 
   const {
     feedbacks,
@@ -40,7 +40,7 @@ const FeedbacksManagement: React.FC = () => {
     onPage,
     viewDetails,
     setDialogVisible,
-  } = useFeedbacks(type, toast, selectedSurveyKey);
+  } = useFeedbacks(type, toast, selectedSurveyKeys);
 
   const {
     stats,
@@ -50,7 +50,7 @@ const FeedbacksManagement: React.FC = () => {
     danhgiaChartData,
     barChartData,
     getPercentValue,
-  } = useFeedbackStats(type, toast, selectedSurveyKey);
+  } = useFeedbackStats(type, toast, selectedSurveyKeys);
 
   const handleFilterChange = (newType: string) => {
     setFilterType(newType);
@@ -123,7 +123,7 @@ const FeedbacksManagement: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardStats(dateFilter);
-  }, [dateFilter, type, fetchDashboardStats, selectedSurveyKey]);
+  }, [dateFilter, type, fetchDashboardStats, selectedSurveyKeys]);
 
   return (
     <AdminLayout title="Quản lý góp ý - phản hồi">
@@ -136,8 +136,8 @@ const FeedbacksManagement: React.FC = () => {
         handleCustomDateChange={handleCustomDateChange}
         reportHeader={null}
         surveys={surveys}
-        selectedSurveyKey={selectedSurveyKey}
-        onSurveyChange={(val) => setSelectedSurveyKey(typeof val === 'string' ? val : '')}
+        selectedSurveyKeys={selectedSurveyKeys}
+        onSurveyChange={(vals) => setSelectedSurveyKeys(vals)}
       />
 
       <FeedbackStatsSection

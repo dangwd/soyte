@@ -1,9 +1,11 @@
 import { api } from "../api";
 
 export const feedBacksSevice = {
-    async fetchFeedBacks(page: number = 1, limit: number = 10, type?: string, survey_key?: string) {
+    async fetchFeedBacks(page: number = 1, limit: number = 10, type?: string, survey_key?: string | string[]) {
         const params: any = { page, limit, type };
-        if (typeof survey_key === 'string' && survey_key !== "") {
+        if (Array.isArray(survey_key) && survey_key.length > 0) {
+            params.survey_key = survey_key.join(',');
+        } else if (typeof survey_key === 'string' && survey_key !== "") {
             params.survey_key = survey_key;
         }
         return api.get('/feedbacks', params);
@@ -13,9 +15,11 @@ export const feedBacksSevice = {
         return api.get(`/feedbacks/${id}`);
     },
 
-    async fetchStats(payload: { startDate: string, endDate: string }, type?: string, survey_key?: string) {
+    async fetchStats(payload: { startDate: string, endDate: string }, type?: string, survey_key?: string | string[]) {
         const params: any = { ...payload, type };
-        if (typeof survey_key === 'string' && survey_key !== "") {
+        if (Array.isArray(survey_key) && survey_key.length > 0) {
+            params.survey_key = survey_key.join(',');
+        } else if (typeof survey_key === 'string' && survey_key !== "") {
             params.survey_key = survey_key;
         }
         return api.get('/feedbacks/stats', params);

@@ -3,7 +3,7 @@ import { feedBacksSevice } from '../services/feedBacksSevice';
 import { Toast } from 'primereact/toast';
 import { DashboardStats } from '../types/DashboardStats';
 
-export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string) => {
+export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string | string[]) => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
