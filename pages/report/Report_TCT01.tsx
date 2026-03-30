@@ -1,5 +1,5 @@
-import AdminLayout from '@/components/AdminLayout'
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import AdminLayout from "@/components/AdminLayout";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 import { ReportFilters } from '@/components/report/ReportFilters'
 import { Toast } from '@/components/prime'
@@ -12,7 +12,7 @@ import { useFacilities } from '@/hooks/useFacilities'
 import { FeedbackItem } from '@/types/feedbacks'
 import { ReportAppendix } from '@/components/report/ReportAppendix'
 import { TCT01TabContent } from '@/components/report/TCT01TabContent'
-import { calculateTotalUnits, calculateOnTimeStats, formatRate, getExpectedFacilities, getReportedFacilityId } from '@/utils/reportDataUtils'
+import { calculateTotalUnits, calculateOnTimeStats, formatRate } from '@/utils/reportDataUtils'
 import { ReportHeader } from '@/components/report/ReportHeader'
 import { ReportLoadingState, ReportEmptyState, StyledTabViewCSS } from '@/components/report/ReportStates'
 import { useReportFilter } from '@/hooks/useReportFilter'
@@ -21,27 +21,43 @@ const Report_TCT01 = () => {
     const toast = useRef<Toast>(null);
     const { facilities } = useFacilities();
     const [loading, setLoading] = useState(false);
+    const [surveys, setSurveys] = useState<any[]>([]);
+    const [selectedSurveyKey, setSelectedSurveyKey] = useState<string>("");
     const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
     const [formTemplates, setFormTemplates] = useState<Record<string, any>>({});
     const fetchedTemplatesRef = useRef<Set<string>>(new Set());
     const loadingTemplatesRef = useRef<Set<string>>(new Set());
 
-    const { filterType, dateFilter, handleFilterChange, handleCustomDateChange } = useReportFilter();
+    const { filterType, dateFilter, handleFilterChange, handleCustomDateChange } =
+        useReportFilter();
 
     const fetchAllFeedbacks = async () => {
         try {
             setLoading(true);
-            const response = await feedBacksSevice.fetchFeedBacksByType('reflect', dateFilter.startDate, dateFilter.endDate);
+            const response = await feedBacksSevice.fetchFeedBacksByType(
+                "reflect",
+                dateFilter.startDate,
+                dateFilter.endDate,
+                selectedSurveyKey,
+            );
             const data = response.data || response;
             let list: any[] = [];
 
-            if (data?.items && Array.isArray(data.items)) { list = data.items; }
-            else if (data?.data?.items && Array.isArray(data.data.items)) { list = data.data.items; }
-            else if (Array.isArray(data)) { list = data; }
+            if (data?.items && Array.isArray(data.items)) {
+                list = data.items;
+            } else if (data?.data?.items && Array.isArray(data.data.items)) {
+                list = data.data.items;
+            } else if (Array.isArray(data)) {
+                list = data;
+            }
             setFeedbacks(list);
         } catch (error) {
             console.error(error);
-            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách phản hồi để báo cáo' });
+            toast.current?.show({
+                severity: "error",
+                summary: "Lỗi",
+                detail: "Không thể tải danh sách phản hồi để báo cáo",
+            });
         } finally {
             setLoading(false);
         }
@@ -49,17 +65,36 @@ const Report_TCT01 = () => {
 
     useEffect(() => {
         fetchAllFeedbacks();
-    }, [dateFilter.startDate, dateFilter.endDate]);
+    }, [dateFilter.startDate, dateFilter.endDate, selectedSurveyKey]);
+
+    useEffect(() => {
+        const fetchSurveys = async () => {
+            try {
+                const data = await surveyService.fetchSurveys(1, 1000, "reflect");
+                const list = Array.isArray(data?.items)
+                    ? data.items
+                    : Array.isArray(data)
+                        ? data
+                        : [];
+                setSurveys(list);
+            } catch (err) {
+                console.error("Lỗi khi tải danh sách khảo sát:", err);
+            }
+        };
+        fetchSurveys();
+    }, []);
 
     // Nhóm các phản hồi theo Biểu mẫu
-    const groupedFeedbacks = useMemo<Record<string, { title: string, items: FeedbackItem[] }>>(() => {
-        const groups: Record<string, { title: string, items: FeedbackItem[] }> = {
-            '3': { title: "Khối các bệnh viện trực thuộc", items: [] },
-            '17': { title: "Đơn vị trợ giúp xã hội trực thuộc", items: [] },
-            '18': { title: "Khối các trạm y tế xã, phường", items: [] }
+    const groupedFeedbacks = useMemo<
+        Record<string, { title: string; items: FeedbackItem[] }>
+    >(() => {
+        const groups: Record<string, { title: string; items: FeedbackItem[] }> = {
+            "3": { title: "Khối các bệnh viện trực thuộc", items: [] },
+            "17": { title: "Đơn vị trợ giúp xã hội trực thuộc", items: [] },
+            "18": { title: "Khối các trạm y tế xã, phường", items: [] },
         };
 
-        feedbacks.forEach(fb => {
+        feedbacks.forEach((fb) => {
             const fId = String(fb.form_id);
             if (groups[fId]) {
                 groups[fId].items.push(fb);
@@ -75,12 +110,15 @@ const Report_TCT01 = () => {
             const formIds = Object.keys(groupedFeedbacks);
 
             for (const id of formIds) {
-                if (!fetchedTemplatesRef.current.has(id) && !loadingTemplatesRef.current.has(id)) {
+                if (
+                    !fetchedTemplatesRef.current.has(id) &&
+                    !loadingTemplatesRef.current.has(id)
+                ) {
                     loadingTemplatesRef.current.add(id);
                     try {
                         const res = await formService.fetchFormById(id);
                         const tplData = res.data || res;
-                        setFormTemplates(prev => ({ ...prev, [id]: tplData }));
+                        setFormTemplates((prev) => ({ ...prev, [id]: tplData }));
                         fetchedTemplatesRef.current.add(id);
                     } catch (err) {
                         console.error(`Error fetching template ${id}:`, err);
@@ -102,24 +140,26 @@ const Report_TCT01 = () => {
             benhVien: { title: "Khối các bệnh viện trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
             troGiupXaHoi: { title: "Đơn vị trợ giúp xã hội trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
             tramYTe: { title: "Khối các trạm y tế xã, phường", tongSo: 0, tiepNhan: [], deCuong: [] },
-            phuLuc: [],
-            phuLucChuaThucHien: []
+            phuLuc: []
         };
 
         const categories = [
-            { id: '3', key: 'benhVien', nhom: "Khối các bệnh viện trực thuộc" },
-            { id: '17', key: 'troGiupXaHoi', nhom: "Các đơn vị trợ giúp xã hội trực thuộc" },
-            { id: '18', key: 'tramYTe', nhom: "Khối các trạm y tế xã, phường" }
+            { id: "3", key: "benhVien", nhom: "Khối các bệnh viện trực thuộc" },
+            {
+                id: "17",
+                key: "troGiupXaHoi",
+                nhom: "Các đơn vị trợ giúp xã hội trực thuộc",
+            },
+            { id: "18", key: "tramYTe", nhom: "Khối các trạm y tế xã, phường" },
         ];
 
-        categories.forEach(cat => {
+        categories.forEach((cat) => {
             const group = groupedFeedbacks[cat.id];
             const items = group?.items || [];
             const template = formTemplates[cat.id];
 
             const totalUnits = calculateTotalUnits(template, facilities);
-            const reportedFacilityIds = new Set(items.map(fb => getReportedFacilityId(fb, facilities)));
-            const reportedCount = reportedFacilityIds.size;
+            const reportedCount = items.length;
             const notReportedCount = Math.max(0, totalUnits - reportedCount);
             const { onTimeCount, lateCount } = calculateOnTimeStats(items, template);
 
@@ -133,40 +173,42 @@ const Report_TCT01 = () => {
                 deCuong: [
                     { stt: 1, noiDung: "Đơn vị báo cáo đúng theo đề cương và biểu mẫu", soLuong: onTimeCount, tyLe: formatRate(onTimeCount, reportedCount) },
                     { stt: 2, noiDung: "Đơn vị báo cáo không đúng theo đề cương và biểu mẫu", soLuong: lateCount, tyLe: formatRate(lateCount, reportedCount) }
-                ],
-                danhSach: [] 
+                ]
             };
 
-            const facilityNames: string[] = items.map(fb => {
-                if (fb.info) {
-                    const candidateKeys = Object.entries(fb.info)
-                        .filter(([k]) => !isNaN(Number(k)))
-                        .map(([_, v]: [string, any]) =>
-                            (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
-                                ? String(v.value.key) : null
-                        )
-                        .filter((k): k is string => !!k);
+            if (reportedCount > 0) {
+                const facilityNames: string[] = items.map(fb => {
+                    if (fb.info) {
+                        const candidateKeys = Object.entries(fb.info)
+                            .filter(([k]) => !isNaN(Number(k)))
+                            .map(([_, v]: [string, any]) =>
+                                (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
+                                    ? String(v.value.key) : null
+                            )
+                            .filter((k): k is string => !!k);
 
-                    for (const key of candidateKeys) {
-                        const facility = facilities.find((f: any) => String(f.id) === String(key));
-                        if (facility) return facility.name;
+                        for (const key of candidateKeys) {
+                            const facility = facilities.find((f: any) => String(f.id) === String(key));
+                            if (facility) return facility.name;
+                        }
+
+                        const firstMatchedField = Object.entries(fb.info)
+                            .filter(([k]) => !isNaN(Number(k)))
+                            .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
+
+                        if (firstMatchedField) {
+                            return String((firstMatchedField[1] as any).value.value);
+                        }
                     }
-
-                    const firstMatchedField = Object.entries(fb.info)
-                        .filter(([k]) => !isNaN(Number(k)))
-                        .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
-
-                    if (firstMatchedField) {
-                        return String((firstMatchedField[1] as any).value.value);
-                    }
-                }
-                const facilityId = fb.info?.facility_id || fb.facility_id;
-                const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
-                return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
-            });
-            
-            data[cat.key].danhSach = Array.from(new Set(facilityNames));
-
+                    const facilityId = fb.info?.facility_id || fb.facility_id;
+                    const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
+                    return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
+                });
+                data.phuLuc.push({
+                    nhom: cat.nhom,
+                    danhSach: Array.from(new Set(facilityNames))
+                });
+            }
         });
 
         return data;
@@ -174,17 +216,33 @@ const Report_TCT01 = () => {
 
     const exportToWord = async () => {
         await exportTCT01ToWord(
-            reportData, dateFilter, setLoading,
-            (msg) => toast.current?.show({ severity: 'success', summary: 'Thành công', detail: msg }),
-            (msg) => toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: msg })
+            reportData,
+            dateFilter,
+            setLoading,
+            (msg) =>
+                toast.current?.show({
+                    severity: "success",
+                    summary: "Thành công",
+                    detail: msg,
+                }),
+            (msg) =>
+                toast.current?.show({ severity: "error", summary: "Lỗi", detail: msg }),
         );
     };
 
     const exportToPDF = async () => {
         await exportTCT01ToPDF(
-            reportData, dateFilter, setLoading,
-            (msg) => toast.current?.show({ severity: 'success', summary: 'Thành công', detail: msg }),
-            (msg) => toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: msg })
+            reportData,
+            dateFilter,
+            setLoading,
+            (msg) =>
+                toast.current?.show({
+                    severity: "success",
+                    summary: "Thành công",
+                    detail: msg,
+                }),
+            (msg) =>
+                toast.current?.show({ severity: "error", summary: "Lỗi", detail: msg }),
         );
     };
 
@@ -193,14 +251,17 @@ const Report_TCT01 = () => {
             title="Kết quả tiếp nhận báo cáo từ ngày"
             dateFilter={dateFilter}
             loading={loading}
-            disabledExport={false}
+            disabledExport={feedbacks.length === 0}
             onExportWord={exportToWord}
             onExportPDF={exportToPDF}
         />
     );
 
     return (
-        <AdminLayout title="Báo cáo kết quả thực hiện" subtitle="Kết quả thực hiện của Tổ công tác số 01">
+        <AdminLayout
+            title="Báo cáo kết quả thực hiện"
+            subtitle="Kết quả thực hiện của Tổ công tác số 01"
+        >
             <Toast ref={toast} />
 
             <div className="space-y-6">
@@ -210,6 +271,10 @@ const Report_TCT01 = () => {
                     dateFilter={dateFilter}
                     handleCustomDateChange={handleCustomDateChange}
                     reportHeader={reportHeader}
+                    surveys={surveys}
+                    selectedSurveyKey={selectedSurveyKey}
+                    onSurveyChange={(val) => setSelectedSurveyKey(val)}
+                    isMulti={false}
                 />
 
                 {loading ? (
@@ -220,27 +285,27 @@ const Report_TCT01 = () => {
                             <TabView className="styled-tabview" scrollable>
                                 <TabPanel header={reportData.benhVien.title}>
                                     <TCT01TabContent
-                                        data={reportData.benhVien}
-                                        dateRange={dateFilter}
+                                        feedbacks={groupedFeedbacks['3']?.items || []}
+                                        formTemplate={formTemplates['3']}
                                     />
                                 </TabPanel>
                                 <TabPanel header={reportData.troGiupXaHoi.title}>
                                     <TCT01TabContent
-                                        data={reportData.troGiupXaHoi}
-                                        dateRange={dateFilter}
+                                        feedbacks={groupedFeedbacks['17']?.items || []}
+                                        formTemplate={formTemplates['17']}
                                     />
                                 </TabPanel>
                                 <TabPanel header={reportData.tramYTe.title}>
                                     <TCT01TabContent
-                                        data={reportData.tramYTe}
-                                        dateRange={dateFilter}
+                                        feedbacks={groupedFeedbacks['18']?.items || []}
+                                        formTemplate={formTemplates['18']}
                                     />
                                 </TabPanel>
                             </TabView>
                         </div>
 
                         {/* Phụ lục danh sách các đơn vị */}
-                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} formTemplates={formTemplates} type="TCT01" />
+                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} />
                     </>
                 ) : (
                     <ReportEmptyState message="Không tìm thấy báo cáo nào trong khoảng thời gian đã chọn." />
@@ -249,7 +314,7 @@ const Report_TCT01 = () => {
 
             <StyledTabViewCSS />
         </AdminLayout>
-    )
-}
+    );
+};
 
 export default Report_TCT01;

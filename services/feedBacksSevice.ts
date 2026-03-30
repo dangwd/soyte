@@ -25,7 +25,9 @@ export const feedBacksSevice = {
         return api.get('/feedbacks/stats', params);
     },
 
-    async fetchFeedBacksByType(type: string, startDate?: string, endDate?: string) {
-        return api.get(`/feedbacks`, { type, startDate, endDate, limit: 1000 });
+    async fetchFeedBacksByType(type: string, startDate?: string, endDate?: string, survey_key?: string) {
+        const params: any = { type, startDate, endDate, limit: 1000 };
+        if (survey_key && survey_key !== "") params.survey_key = survey_key;
+        return api.get(`/feedbacks`, params);
     },
 };

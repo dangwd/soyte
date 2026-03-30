@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 import { Dropdown } from "primereact/dropdown";
 import { MultiSelect } from "primereact/multiselect";
 import { Calendar } from "primereact/calendar";
-import { formatDateVN } from '../../utils/dateUtils';
+import { formatDateVN } from "../../utils/dateUtils";
 
 interface ReportFiltersProps {
   filterType: string;
@@ -12,10 +12,12 @@ interface ReportFiltersProps {
     date: Date | null,
     field: "startDate" | "endDate",
   ) => void;
-  reportHeader: React.ReactNode;
+  reportHeader?: React.ReactNode;
   surveys?: any[];
-  selectedSurveyKeys?: string[];
-  onSurveyChange?: (surveyKeys: string[]) => void;
+  selectedSurveyKeys?: string[]; // for multi
+  selectedSurveyKey?: string; // for single
+  onSurveyChange?: (val: any) => void;
+  isMulti?: boolean;
 }
 
 const filterOptions = [
@@ -35,56 +37,89 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
   reportHeader,
   surveys = [],
   selectedSurveyKeys,
+  selectedSurveyKey,
   onSurveyChange,
+  isMulti = true,
 }) => {
-  const surveyOptions = surveys.map((s) => ({
-    label: s.name,
-    value: String(s.key || s.id || ""),
-  }));
+  const surveyOptions = [
+    ...(isMulti ? [] : [{ label: "Tất cả cuộc khảo sát", value: "" }]),
+    ...surveys.map((s) => ({
+      label: s.name,
+      value: String(s.key || s.id || ""),
+    })),
+  ];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-      {reportHeader}
+    <div className="flex flex-col gap-6 mb-8 bg-white p-6 md:p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100/80 transition-all hover:shadow-2xl hover:shadow-slate-300/40">
+      {/* Header Row: Title & Export Buttons */}
+      {reportHeader && (
+        <>
+          <div className="w-full overflow-hidden">{reportHeader}</div>
+          {/* Divider */}
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-60" />
+        </>
+      )}
 
-      <div className="flex flex-wrap items-center gap-3 ml-auto">
-        {onSurveyChange && (
-          <MultiSelect
-            value={selectedSurveyKeys}
-            options={surveyOptions}
-            onChange={(e) => onSurveyChange(e.value)}
-            className="w-full md:w-[350px] h-[48px] flex items-center rounded-xl border border-slate-300 font-medium text-primary-900 bg-white shadow-sm"
-            panelClassName="survey-ms-panel"
-            placeholder="Chọn cuộc khảo sát"
-            filter
-            maxSelectedLabels={3}
+      {/* Filter Row: Survey, Time, Date */}
+      <div className="flex flex-wrap items-center justify-end gap-4">
+        {onSurveyChange &&
+          (isMulti ? (
+            <div className="w-full md:w-[350px]">
+              <MultiSelect
+                value={selectedSurveyKeys}
+                options={surveyOptions}
+                optionLabel="label"
+                optionValue="value"
+                onChange={(e) => onSurveyChange(e.value)}
+                className="w-full h-[52px] flex items-center rounded-2xl border border-slate-200 font-medium text-slate-700 bg-slate-50/50 hover:bg-white hover:border-primary-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm"
+                panelClassName="survey-ms-panel"
+                placeholder="Chọn cuộc khảo sát"
+                filter
+                maxSelectedLabels={3}
+              />
+            </div>
+          ) : (
+            <div className="w-full md:w-[300px]">
+              <Dropdown
+                value={selectedSurveyKey}
+                options={surveyOptions}
+                optionLabel="label"
+                optionValue="value"
+                onChange={(e) => onSurveyChange(e.value)}
+                className="w-full h-[52px] flex items-center rounded-2xl border border-slate-200 font-medium text-slate-700 bg-slate-50/50 hover:bg-white hover:border-primary-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm"
+                placeholder="Chọn cuộc khảo sát"
+                filter
+              />
+            </div>
+          ))}
+
+        <div className="w-full md:w-auto">
+          <Dropdown
+            value={filterType}
+            options={filterOptions}
+            onChange={(e) => handleFilterChange(e.value)}
+            className="w-full md:w-[220px] h-[52px] flex items-center rounded-2xl border border-slate-200 font-medium text-slate-700 bg-slate-50/50 hover:bg-white hover:border-primary-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm"
+            placeholder="Chọn khoảng thời gian"
           />
-        )}
-        <Dropdown
-          value={filterType}
-          options={filterOptions}
-          onChange={(e) => handleFilterChange(e.value)}
-          className="w-full md:w-[200px] h-[48px] flex items-center rounded-xl border border-slate-300 font-medium text-primary-900 bg-white shadow-sm"
-          placeholder="Chọn khoảng thời gian"
-        />
+        </div>
 
         {filterType !== "custom" && (
-          <div className="flex items-center gap-2 px-4 h-[48px] bg-slate-50 rounded-xl border border-slate-200">
-            <i className="pi pi-calendar text-primary-600"></i>
-            <span className="text-sm font-semibold text-slate-700">
-              {formatDateVN(dateFilter.startDate)} -{" "}
+          <div className="flex items-center gap-3 px-5 h-[52px] bg-primary-50/30 rounded-2xl border border-primary-100/50 text-primary-900 shadow-inner">
+            <i className="pi pi-calendar-plus text-primary-600 font-bold"></i>
+            <span className="text-sm font-bold tracking-tight">
+              {formatDateVN(dateFilter.startDate)} —{" "}
               {formatDateVN(dateFilter.endDate)}
             </span>
           </div>
         )}
 
         {filterType === "custom" && (
-          <div className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-right-2 duration-300">
-            {/* ── Ô TỪ NGÀY ── */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600 whitespace-nowrap">
-                Từ ngày:
+          <div className="flex flex-wrap items-center gap-4 p-1 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Từ
               </span>
-              <div className="bg-white border border-slate-300 rounded-xl overflow-hidden hover:border-primary-500 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-200 transition-all w-[160px] h-[48px] flex items-center">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden hover:border-primary-400 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 transition-all w-[180px] h-[52px] flex items-center shadow-sm">
                 <Calendar
                   value={
                     dateFilter.startDate ? new Date(dateFilter.startDate) : null
@@ -93,20 +128,19 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
                     handleCustomDateChange(e.value as Date, "startDate")
                   }
                   className="w-full"
-                  inputClassName="w-full h-[48px] border-none bg-transparent px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none cursor-pointer"
+                  inputClassName="w-full h-[52px] border-none bg-transparent px-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none cursor-pointer"
                   dateFormat="dd/mm/yy"
-                  placeholder="dd/mm/yyyy"
+                  placeholder="Ngày bắt đầu"
                   showIcon
                 />
               </div>
             </div>
 
-            {/* ── Ô ĐẾN NGÀY ── */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600 whitespace-nowrap">
-                Đến ngày:
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Đến
               </span>
-              <div className="bg-white border border-slate-300 rounded-xl overflow-hidden hover:border-primary-500 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-200 transition-all w-[160px] h-[48px] flex items-center">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden hover:border-primary-400 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 transition-all w-[180px] h-[52px] flex items-center shadow-sm">
                 <Calendar
                   value={
                     dateFilter.endDate ? new Date(dateFilter.endDate) : null
@@ -115,9 +149,9 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
                     handleCustomDateChange(e.value as Date, "endDate")
                   }
                   className="w-full"
-                  inputClassName="w-full h-[48px] border-none bg-transparent px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none cursor-pointer"
+                  inputClassName="w-full h-[52px] border-none bg-transparent px-4 text-sm font-semibold text-slate-700 placeholder:text-slate-400 focus:ring-0 outline-none cursor-pointer"
                   dateFormat="dd/mm/yy"
-                  placeholder="dd/mm/yyyy"
+                  placeholder="Ngày kết thúc"
                   showIcon
                 />
               </div>

@@ -8,7 +8,7 @@ export interface DateFilter {
     endDate: string;
 }
 
-export function useKSHLData(dateFilter: DateFilter) {
+export function useKSHLData(dateFilter: DateFilter, surveyKey?: string) {
     const [rawFeedbacks, setRawFeedbacks] = useState<any[]>([]);
     const [forms, setForms] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export function useKSHLData(dateFilter: DateFilter) {
             setError(null);
             try {
                 const [fbRes, formRes] = await Promise.all([
-                    feedBacksSevice.fetchFeedBacksByType('evaluate', dateFilter.startDate, dateFilter.endDate),
+                    feedBacksSevice.fetchFeedBacksByType('evaluate', dateFilter.startDate, dateFilter.endDate, surveyKey),
                     formService.fetchForms(1, 1000, 'evaluate')
                 ]);
 
@@ -40,7 +40,7 @@ export function useKSHLData(dateFilter: DateFilter) {
             }
         };
         fetchData();
-    }, [dateFilter]);
+    }, [dateFilter, surveyKey]);
 
     const processedData = useMemo(() => {
         if (!rawFeedbacks.length) {
