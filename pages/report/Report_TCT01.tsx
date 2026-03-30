@@ -16,6 +16,8 @@ import { calculateTotalUnits, calculateOnTimeStats, formatRate } from '@/utils/r
 import { ReportHeader } from '@/components/report/ReportHeader'
 import { ReportLoadingState, ReportEmptyState, StyledTabViewCSS } from '@/components/report/ReportStates'
 import { useReportFilter } from '@/hooks/useReportFilter'
+import { surveyService } from "@/services/surveyService";
+
 
 const Report_TCT01 = () => {
     const toast = useRef<Toast>(null);
@@ -137,10 +139,9 @@ const Report_TCT01 = () => {
     // Tính toán dữ liệu báo cáo từ feedbacks và templates
     const reportData = useMemo(() => {
         const data: any = {
-            benhVien: { title: "Khối các bệnh viện trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
-            troGiupXaHoi: { title: "Đơn vị trợ giúp xã hội trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
-            tramYTe: { title: "Khối các trạm y tế xã, phường", tongSo: 0, tiepNhan: [], deCuong: [] },
-            phuLuc: []
+            benhVien: { title: "Khối các bệnh viện trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [], danhSach: [] },
+            troGiupXaHoi: { title: "Đơn vị trợ giúp xã hội trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [], danhSach: [] },
+            tramYTe: { title: "Khối các trạm y tế xã, phường", tongSo: 0, tiepNhan: [], deCuong: [], danhSach: [] },
         };
 
         const categories = [
@@ -204,10 +205,7 @@ const Report_TCT01 = () => {
                     const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
                     return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
                 });
-                data.phuLuc.push({
-                    nhom: cat.nhom,
-                    danhSach: Array.from(new Set(facilityNames))
-                });
+                data[cat.key].danhSach = Array.from(new Set(facilityNames));
             }
         });
 
@@ -305,7 +303,7 @@ const Report_TCT01 = () => {
                         </div>
 
                         {/* Phụ lục danh sách các đơn vị */}
-                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} />
+                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} type="TCT01" />
                     </>
                 ) : (
                     <ReportEmptyState message="Không tìm thấy báo cáo nào trong khoảng thời gian đã chọn." />
