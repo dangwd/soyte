@@ -12,7 +12,7 @@ import { useFacilities } from '@/hooks/useFacilities'
 import { FeedbackItem } from '@/types/feedbacks'
 import { ReportAppendix } from '@/components/report/ReportAppendix'
 import { TCT01TabContent } from '@/components/report/TCT01TabContent'
-import { calculateTotalUnits, calculateOnTimeStats, formatRate } from '@/utils/reportDataUtils'
+import { calculateTotalUnits, calculateOnTimeStats, formatRate, getExpectedFacilities, getReportedFacilityId } from '@/utils/reportDataUtils'
 import { ReportHeader } from '@/components/report/ReportHeader'
 import { ReportLoadingState, ReportEmptyState, StyledTabViewCSS } from '@/components/report/ReportStates'
 import { useReportFilter } from '@/hooks/useReportFilter'
@@ -102,7 +102,8 @@ const Report_TCT01 = () => {
             benhVien: { title: "Khối các bệnh viện trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
             troGiupXaHoi: { title: "Đơn vị trợ giúp xã hội trực thuộc", tongSo: 0, tiepNhan: [], deCuong: [] },
             tramYTe: { title: "Khối các trạm y tế xã, phường", tongSo: 0, tiepNhan: [], deCuong: [] },
-            phuLuc: []
+            phuLuc: [],
+            phuLucChuaThucHien: []
         };
 
         const categories = [
@@ -117,7 +118,8 @@ const Report_TCT01 = () => {
             const template = formTemplates[cat.id];
 
             const totalUnits = calculateTotalUnits(template, facilities);
-            const reportedCount = items.length;
+            const reportedFacilityIds = new Set(items.map(fb => getReportedFacilityId(fb, facilities)));
+            const reportedCount = reportedFacilityIds.size;
             const notReportedCount = Math.max(0, totalUnits - reportedCount);
             const { onTimeCount, lateCount } = calculateOnTimeStats(items, template);
 
@@ -131,42 +133,40 @@ const Report_TCT01 = () => {
                 deCuong: [
                     { stt: 1, noiDung: "Đơn vị báo cáo đúng theo đề cương và biểu mẫu", soLuong: onTimeCount, tyLe: formatRate(onTimeCount, reportedCount) },
                     { stt: 2, noiDung: "Đơn vị báo cáo không đúng theo đề cương và biểu mẫu", soLuong: lateCount, tyLe: formatRate(lateCount, reportedCount) }
-                ]
+                ],
+                danhSach: [] 
             };
 
-            if (reportedCount > 0) {
-                const facilityNames: string[] = items.map(fb => {
-                    if (fb.info) {
-                        const candidateKeys = Object.entries(fb.info)
-                            .filter(([k]) => !isNaN(Number(k)))
-                            .map(([_, v]: [string, any]) =>
-                                (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
-                                    ? String(v.value.key) : null
-                            )
-                            .filter((k): k is string => !!k);
+            const facilityNames: string[] = items.map(fb => {
+                if (fb.info) {
+                    const candidateKeys = Object.entries(fb.info)
+                        .filter(([k]) => !isNaN(Number(k)))
+                        .map(([_, v]: [string, any]) =>
+                            (v && typeof v === 'object' && v.value && typeof v.value === 'object' && v.value.key)
+                                ? String(v.value.key) : null
+                        )
+                        .filter((k): k is string => !!k);
 
-                        for (const key of candidateKeys) {
-                            const facility = facilities.find((f: any) => String(f.id) === String(key));
-                            if (facility) return facility.name;
-                        }
-
-                        const firstMatchedField = Object.entries(fb.info)
-                            .filter(([k]) => !isNaN(Number(k)))
-                            .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
-
-                        if (firstMatchedField) {
-                            return String((firstMatchedField[1] as any).value.value);
-                        }
+                    for (const key of candidateKeys) {
+                        const facility = facilities.find((f: any) => String(f.id) === String(key));
+                        if (facility) return facility.name;
                     }
-                    const facilityId = fb.info?.facility_id || fb.facility_id;
-                    const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
-                    return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
-                });
-                data.phuLuc.push({
-                    nhom: cat.nhom,
-                    danhSach: Array.from(new Set(facilityNames))
-                });
-            }
+
+                    const firstMatchedField = Object.entries(fb.info)
+                        .filter(([k]) => !isNaN(Number(k)))
+                        .find(([_, v]: [string, any]) => v?.value?.key && v?.value?.value);
+
+                    if (firstMatchedField) {
+                        return String((firstMatchedField[1] as any).value.value);
+                    }
+                }
+                const facilityId = fb.info?.facility_id || fb.facility_id;
+                const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
+                return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
+            });
+            
+            data[cat.key].danhSach = Array.from(new Set(facilityNames));
+
         });
 
         return data;
@@ -193,7 +193,7 @@ const Report_TCT01 = () => {
             title="Kết quả tiếp nhận báo cáo từ ngày"
             dateFilter={dateFilter}
             loading={loading}
-            disabledExport={feedbacks.length === 0}
+            disabledExport={false}
             onExportWord={exportToWord}
             onExportPDF={exportToPDF}
         />
@@ -220,27 +220,27 @@ const Report_TCT01 = () => {
                             <TabView className="styled-tabview" scrollable>
                                 <TabPanel header={reportData.benhVien.title}>
                                     <TCT01TabContent
-                                        feedbacks={groupedFeedbacks['3']?.items || []}
-                                        formTemplate={formTemplates['3']}
+                                        data={reportData.benhVien}
+                                        dateRange={dateFilter}
                                     />
                                 </TabPanel>
                                 <TabPanel header={reportData.troGiupXaHoi.title}>
                                     <TCT01TabContent
-                                        feedbacks={groupedFeedbacks['17']?.items || []}
-                                        formTemplate={formTemplates['17']}
+                                        data={reportData.troGiupXaHoi}
+                                        dateRange={dateFilter}
                                     />
                                 </TabPanel>
                                 <TabPanel header={reportData.tramYTe.title}>
                                     <TCT01TabContent
-                                        feedbacks={groupedFeedbacks['18']?.items || []}
-                                        formTemplate={formTemplates['18']}
+                                        data={reportData.tramYTe}
+                                        dateRange={dateFilter}
                                     />
                                 </TabPanel>
                             </TabView>
                         </div>
 
                         {/* Phụ lục danh sách các đơn vị */}
-                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} />
+                        <ReportAppendix groupedFeedbacks={groupedFeedbacks} formTemplates={formTemplates} type="TCT01" />
                     </>
                 ) : (
                     <ReportEmptyState message="Không tìm thấy báo cáo nào trong khoảng thời gian đã chọn." />

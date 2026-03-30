@@ -3,33 +3,17 @@ import { FeedbackItem } from '@/types/feedbacks';
 import { calculateTotalUnits, calculateOnTimeStats, formatRate } from '@/utils/reportDataUtils';
 
 interface TCT01TabContentProps {
-    feedbacks: FeedbackItem[];
-    formTemplate?: any;
+    data: {
+        tongSo: number;
+        tiepNhan: any[];
+        deCuong: any[];
+    };
+    dateRange: { startDate: string, endDate: string };
 }
 
-export const TCT01TabContent: React.FC<TCT01TabContentProps> = ({ feedbacks, formTemplate }) => {
-    // 1. Tính tổng số đơn vị
-    const totalUnits = useMemo(() => calculateTotalUnits(formTemplate), [formTemplate]);
-
-    // 2. Thống kê báo cáo
-    const reportedCount = feedbacks.length;
-    const notReportedCount = Math.max(0, totalUnits - reportedCount);
-
-    // 3. Đúng đề cương (On-time/Late)
-    const { onTimeCount, lateCount } = useMemo(() =>
-        calculateOnTimeStats(feedbacks, formTemplate),
-        [feedbacks, formTemplate]);
-
-    const tiepNhanData = [
-        { stt: 1, noiDung: "Đơn vị báo cáo", soLuong: reportedCount, tyLe: formatRate(reportedCount, totalUnits) },
-        { stt: 2, noiDung: "Đơn vị không báo cáo", soLuong: notReportedCount, tyLe: formatRate(notReportedCount, totalUnits) }
-    ];
-
-    const deCuongData = [
-        { stt: 1, noiDung: "Đơn vị báo cáo đúng theo đề cương và biểu mẫu", soLuong: onTimeCount, tyLe: formatRate(onTimeCount, reportedCount) },
-        { stt: 2, noiDung: "Đơn vị báo cáo không đúng theo đề cương và biểu mẫu", soLuong: lateCount, tyLe: formatRate(lateCount, reportedCount) }
-    ];
-
+export const TCT01TabContent: React.FC<TCT01TabContentProps> = ({ data, dateRange }) => {
+    const { tongSo, tiepNhan, deCuong } = data;
+    const reportedCount = tiepNhan.find(i => i.stt === 1)?.soLuong || 0;
 
     return (
         <div className="p-4 md:p-6 bg-slate-50 min-h-[50vh] space-y-6">
@@ -39,9 +23,9 @@ export const TCT01TabContent: React.FC<TCT01TabContentProps> = ({ feedbacks, for
                     <h3 className="font-bold text-slate-800 text-lg">Tổng hợp tình hình báo cáo</h3>
                 </div>
                 <div className="overflow-x-auto p-6">
-                    {totalUnits > 0 && (
+                    {tongSo > 0 && (
                         <div className="text-slate-800 font-bold text-lg mb-4">
-                            Tổng số: <span className="text-primary-700">{totalUnits}</span> đơn vị.
+                            Tổng số: <span className="text-primary-700">{tongSo}</span> đơn vị.
                         </div>
                     )}
                     <table className="w-full border-collapse border border-slate-300">
@@ -54,7 +38,7 @@ export const TCT01TabContent: React.FC<TCT01TabContentProps> = ({ feedbacks, for
                             </tr>
                         </thead>
                         <tbody>
-                            {tiepNhanData.map((item, index) => (
+                            {tiepNhan.map((item, index) => (
                                 <tr key={index} className="hover:bg-slate-50 border-b border-slate-200">
                                     <td className="border border-slate-300 p-3 text-center text-slate-700 font-medium">{item.stt}</td>
                                     <td className="border border-slate-300 p-3 text-slate-800 font-medium">{item.noiDung}</td>
@@ -84,7 +68,7 @@ export const TCT01TabContent: React.FC<TCT01TabContentProps> = ({ feedbacks, for
                             </tr>
                         </thead>
                         <tbody>
-                            {deCuongData.map((item, index) => (
+                            {deCuong.map((item, index) => (
                                 <tr key={index} className="hover:bg-slate-50 border-b border-slate-200">
                                     <td className="border border-slate-300 p-3 text-center text-slate-700 font-medium">{item.stt}</td>
                                     <td className="border border-slate-300 p-3 text-slate-800 font-medium">{item.noiDung}</td>

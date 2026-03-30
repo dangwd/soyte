@@ -108,7 +108,7 @@ export const exportTCT01ToPDF = async (
             autoTable(doc, {
                 startY: currentY,
                 head: [['STT', 'Nội dung', 'Số lượng', 'Tỷ lệ']],
-                body: data.tiepNhan.map((item: any) => [item.stt, item.noiDung, item.soLuong, item.tyLe]),
+                body: (data.tiepNhan || []).map((item: any) => [item.stt, item.noiDung, item.soLuong, item.tyLe]),
                 theme: 'grid',
                 styles: { font: FONT_REGULAR, fontSize: 11, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
                 headStyles: { font: FONT_BOLD, fontStyle: 'normal', fillColor: [240, 240, 240], halign: 'center' },
@@ -118,12 +118,13 @@ export const exportTCT01ToPDF = async (
             currentY = (doc as any).lastAutoTable.finalY + 8;
 
             printPara(`${khoi.id}.2. Kết quả thực hiện theo đề cương và phụ lục báo cáo`, { fontStyle: 'bold', indent: leftMargin + 5 });
-            printPara(`(Chỉ phân tích trên ${data.tiepNhan[0].soLuong} đơn vị báo cáo)`, { fontStyle: 'normal', indent: leftMargin + 5 });
+            const reportedNum = (data.tiepNhan && data.tiepNhan.length > 0) ? data.tiepNhan[0].soLuong : 0;
+            printPara(`(Chỉ phân tích trên ${reportedNum} đơn vị báo cáo)`, { fontStyle: 'normal', indent: leftMargin + 5 });
 
             autoTable(doc, {
                 startY: currentY,
                 head: [['STT', 'Nội dung', 'Số lượng', 'Tỷ lệ']],
-                body: data.deCuong.map((item: any) => [item.stt, item.noiDung, item.soLuong, item.tyLe]),
+                body: (data.deCuong || []).map((item: any) => [item.stt, item.noiDung, item.soLuong, item.tyLe]),
                 theme: 'grid',
                 styles: { font: FONT_REGULAR, fontSize: 11, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
                 headStyles: { font: FONT_BOLD, fontStyle: 'normal', fillColor: [240, 240, 240], halign: 'center' },
@@ -179,30 +180,46 @@ export const exportTCT01ToPDF = async (
             currentY = 25;
         }
 
-        // 8. PHỤ LỤC
+        // 8. PHỤ LỤC (Danh sách đơn vị đã gửi báo cáo)
+        doc.addPage();
+        currentY = 25;
         doc.setFont(FONT_BOLD);
         doc.setFontSize(14);
-        doc.text("PHỤ LỤC", 105, currentY, { align: "center" });
+        doc.text("PHỤ LỤC 1", 105, currentY, { align: "center" });
         currentY += 9;
         doc.setFontSize(12);
         doc.text("DANH SÁCH CÁC ĐƠN VỊ ĐÃ THỰC HIỆN BÁO CÁO", 105, currentY, { align: "center" });
 
         const romanNums = ["I", "II", "III", "IV", "V"];
-        const phuLucBody: any[] = [];
-        mockData.phuLuc.forEach((khoi: any, index: number) => {
-            phuLucBody.push([
+        const appendixBody: any[] = [];
+        
+        const categoriesData = [
+            { key: 'benhVien', nhom: 'Khối Bệnh viện' },
+            { key: 'troGiupXaHoi', nhom: 'Khối cơ sở trợ giúp xã hội' },
+            { key: 'tramYTe', nhom: 'Khối Trạm y tế xã, phường, thị trấn' }
+        ];
+
+        categoriesData.forEach((cat, index) => {
+            const groupData = mockData[cat.key as keyof typeof mockData] as any;
+            appendixBody.push([
                 { content: romanNums[index], styles: { font: FONT_BOLD, fontStyle: 'normal', halign: 'center', fillColor: [240, 240, 240] } },
-                { content: khoi.nhom.toUpperCase(), styles: { font: FONT_BOLD, fontStyle: 'normal', fillColor: [240, 240, 240] } }
+                { content: cat.nhom.toUpperCase(), styles: { font: FONT_BOLD, fontStyle: 'normal', fillColor: [240, 240, 240] } }
             ]);
-            khoi.danhSach.forEach((ten: any, i: number) => {
-                phuLucBody.push([{ content: i + 1, styles: { halign: 'center' } }, ten]);
-            });
+
+            if (groupData && groupData.danhSach && groupData.danhSach.length > 0) {
+                groupData.danhSach.forEach((ten: string, i: number) => {
+                    appendixBody.push([{ content: i + 1, styles: { halign: 'center' } }, ten]);
+                });
+            } else {
+                appendixBody.push([{ content: '-', styles: { halign: 'center' } }, '(Không có dữ liệu)']);
+            }
         });
+
         currentY += 7;
         autoTable(doc, {
             startY: currentY,
             head: [['STT', 'Tên đơn vị']],
-            body: phuLucBody,
+            body: appendixBody,
             theme: 'grid',
             styles: { font: FONT_REGULAR, fontSize: 11, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
             headStyles: { font: FONT_BOLD, fontStyle: 'normal', fillColor: [230, 230, 230], halign: 'center' },
