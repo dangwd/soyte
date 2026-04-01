@@ -7,7 +7,6 @@ import {
   Navigation,
   Activity,
   Info,
-  X,
   HeartPulse,
   Users,
   Building,
@@ -17,11 +16,12 @@ import {
   Hospital,
   SlidersHorizontal,
   List,
+  Loader2,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/prime";
-import { ALL_FACILITIES } from "@/constants";
+import { api } from "@/api";
 import { Sidebar } from "primereact/sidebar";
 import { Dialog } from "primereact/dialog";
 import "../styles/index.css"
@@ -124,16 +124,48 @@ const HanoiSystem = () => {
   const isMobile = useResponsive();
   const [sheetVisible, setSheetVisible] = useState(true);
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get("/social-facilities", { limit: 2000 });
+        if (response && response.success) {
+          const mapped: Facility[] = (response.data as any[]).map((item) => ({
+            id: String(item.id),
+            name: item.name,
+            type: item.type as Facility["type"],
+            address: item.address,
+            phone: item.phone || "",
+            coords:
+              item.latitude && item.longitude
+                ? [Number(item.latitude), Number(item.longitude)]
+                : null as any,
+            description: item.description || "",
+            category: item.category || "",
+          }));
+          setFacilities(mapped);
+        }
+      } catch (error) {
+        console.error("Error fetching facilities:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFacilities();
+  }, []);
 
   const filteredFacilities = useMemo(() => {
-    return ALL_FACILITIES.filter((item) => {
+    return facilities.filter((item) => {
       const matchType = filterType === "ALL" || item.type === filterType;
       const matchSearch =
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.address.toLowerCase().includes(searchTerm.toLowerCase());
       return matchType && matchSearch;
     });
-  }, [filterType, searchTerm]);
+  }, [facilities, filterType, searchTerm]);
 
   const handleMarkerClick = useCallback(
     (facility: Facility) => {
@@ -308,7 +340,7 @@ const HanoiSystem = () => {
                  Mạng lưới Y tế Hà Nội
                </h1>
                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
-                 Dữ liệu {ALL_FACILITIES.length} cơ sở y tế
+                 {loading ? "Đang tải dữ liệu..." : `Dữ liệu ${facilities.length} cơ sở y tế`}
                </p>
              </div>
            </div>
@@ -325,7 +357,14 @@ const HanoiSystem = () => {
               </div>
               <FilterButtons />
             </div>
-            <FacilityList />
+            {loading ? (
+              <div className="flex-grow flex flex-col items-center justify-center gap-3 text-gray-400">
+                <Loader2 size={32} className="animate-spin text-primary-600" />
+                <p className="text-xs font-bold uppercase">Đang tải dữ liệu...</p>
+              </div>
+            ) : (
+              <FacilityList />
+            )}
           </div>
         )}
 
