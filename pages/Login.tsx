@@ -4,6 +4,7 @@ import { Eye, EyeOff, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../AuthContext"; // Import useAuth
 import { Button } from "@/components/prime";
+import { getLandingPath } from "../utils/permissionUtils";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +29,13 @@ const Login: React.FC = () => {
 
       if (data && data.token) {
         await login(data.token);
-        navigate("/admin/dashboard", { replace: true });
+        
+        // Re-fetching user info from localStorage if needed since context might not be updated yet
+        const storedUser = localStorage.getItem("user_info");
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        const landingPath = getLandingPath(user);
+        
+        navigate(landingPath, { replace: true });
       } else {
         throw new Error("Phản hồi từ máy chủ không hợp lệ.");
       }

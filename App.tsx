@@ -106,7 +106,7 @@ const App = () => {
           <Route path="report/KSHL" element={<Report_KSHL />} />
           <Route path="report/TCT01" element={<Report_TCT01 />} />
           {/* New Admin Schedule Route */}
-          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route index element={<AdminRoute />} />
         </Route>
         {/* Not Found */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -9,6 +9,7 @@ import { Button } from "@/components/prime";
 import { adminMenu, type MenuItem } from "../adminMenu";
 import UserInfoModal from "./UserInfoModal";
 import { useRef } from "react";
+import { hasPermission } from "../utils/permissionUtils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -122,7 +123,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   const checkPermission = (itemPermission?: string) => {
     // if (user?.role === "admin") return true;
     if (!itemPermission) return true;
-    return user?.permissions?.includes(itemPermission);
+    const userPermissions = user?.permissions || [];
+    return hasPermission(userPermissions, itemPermission);
   };
 
   return (

@@ -1,28 +1,51 @@
-
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import React from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../AuthContext";
+import { isPathAllowed, getLandingPath } from "../utils/permissionUtils";
 
 const AdminRoute: React.FC = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    // You can render a loading spinner here
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (!user) {
-    // If not logged in, redirect to login page
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'admin') {
-    // If logged in but not an admin, redirect to a 'not found' or 'forbidden' page
-    // Or simply back to the homepage
+  if (user.role !== "admin") {
     return <Navigate to="/" replace />;
   }
 
-  // If user is an admin, render the child routes
+  const currentPath = location.pathname;
+  const userPermissions = user.permissions || [];
+
+  // 1. If user has NO permissions at all, redirect to homepage
+  if (userPermissions.length === 0) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 2. Handle the root admin path (/admin) by redirecting to the first allowed feature
+  if (currentPath === "/admin" || currentPath === "/admin/") {
+    const landingPath = getLandingPath(user);
+    // If no landing path found, it will redirect back to the home page via getLandingPath returning "/"
+    return <Navigate to={landingPath} replace />;
+  }
+
+  // 3. Check if the specific sub-path is allowed
+  if (!isPathAllowed(currentPath, user)) {
+    // If they are on a page they don't have permission for, 
+    // redirect them to their primary landing page instead of the homepage.
+    const landingPath = getLandingPath(user);
+    return <Navigate to={landingPath} replace />;
+  }
+
   return <Outlet />;
 };
 
