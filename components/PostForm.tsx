@@ -87,6 +87,7 @@ const PostForm: React.FC<PostFormProps> = ({
     const newErrors: any = {};
     if (!formData.title.trim()) newErrors.title = "Tiêu đề không được để trống";
     if (!formData.category) newErrors.category = "Vui lòng chọn danh mục";
+    if (!formData.imageUrl.trim()) newErrors.imageUrl = "Vui lòng chọn ảnh đại diện";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -234,7 +235,7 @@ const PostForm: React.FC<PostFormProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                Ảnh đại diện bài viết
+                Ảnh đại diện bài viết <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="relative">
@@ -249,9 +250,16 @@ const PostForm: React.FC<PostFormProps> = ({
                         setFormData({ ...formData, imageUrl: e.target.value })
                       }
                       placeholder="Link ảnh..."
-                      className="w-full pl-10 py-3 bg-gray-50 border border-gray-200 rounded-lg text-xs"
+                      className={`w-full pl-10 py-3 bg-gray-50 border ${
+                        errors.imageUrl ? "border-red-500" : "border-gray-200"
+                      } rounded-lg text-xs`}
                     />
                   </span>
+                  {errors.imageUrl && (
+                    <p className="text-red-500 text-[10px] mt-1 font-bold">
+                      {errors.imageUrl}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button
