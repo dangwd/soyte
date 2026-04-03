@@ -215,13 +215,13 @@ const PermissionsManagement: React.FC = () => {
               <span
                 className={`font-black text-gray-800 uppercase tracking-tight ${level > 0 ? "text-gray-500 font-bold" : ""}`}
               >
-                {item.name}
+                {item.description || item.name}
               </span>
             </div>
           </td>
           <td className="px-6 py-4">
-            <p className="text-[10px] font-bold text-gray-400 line-clamp-1 max-w-xs uppercase">
-              {item.description || "---"}
+            <p className="text-[10px] font-bold text-gray-400 line-clamp-1 max-w-xs uppercase italic opacity-70">
+              {item.name}
             </p>
           </td>
           <td className="px-6 py-4">
