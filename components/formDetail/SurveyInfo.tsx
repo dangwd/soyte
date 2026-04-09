@@ -5,11 +5,21 @@ import { Dropdown } from "primereact/dropdown";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/AuthContext";
 const PAGE_SIZE = 10;
-export default function SurveyInfo({ info, fieldKey, value, onChange, error, survey_key, form_id }) {
+export default function SurveyInfo({
+  info,
+  fieldKey,
+  value,
+  onChange,
+  error,
+  survey_key,
+  form_id,
+}) {
   const { user } = useAuth();
 
   // State kiểm tra đơn vị đã khai báo chưa
-  const [checkUnitStatus, setCheckUnitStatus] = useState<null | "checking" | "declared" | "not_declared">(null);
+  const [checkUnitStatus, setCheckUnitStatus] = useState<
+    null | "checking" | "declared" | "not_declared"
+  >(null);
   const [checkUnitMessage, setCheckUnitMessage] = useState<string>("");
   const checkUnitAbortRef = useRef<AbortController | null>(null);
 
@@ -83,17 +93,22 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
 
   useEffect(() => {
     const fetchOptions = async () => {
-      if (info.type !== "select" && info.type !== "facility_multiselect") return;
+      if (info.type !== "select" && info.type !== "facility_multiselect")
+        return;
 
       try {
         setLoading(true);
         const typeFilter = info.facilityTypeFilter?.length
-          ? (Array.isArray(info.facilityTypeFilter)
-              ? info.facilityTypeFilter.join(",")
-              : info.facilityTypeFilter)
+          ? Array.isArray(info.facilityTypeFilter)
+            ? info.facilityTypeFilter.join(",")
+            : info.facilityTypeFilter
           : "";
 
-        const response = await socialFacilitiesService.getAll(1, 1000, typeFilter);
+        const response = await socialFacilitiesService.getAll(
+          1,
+          1000,
+          typeFilter,
+        );
         const data = response.items || response || [];
         setApiOptions(data.map((f: any) => ({ key: f.id, value: f.name })));
       } catch (err) {
@@ -112,11 +127,16 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
     else if (apiOptions.length > 0) options = apiOptions;
 
     const unitId = localStorage.getItem("unit_id");
-    if (unitId && (info.type === "select" || info.type === "facility_multiselect")) {
-        const matchedOption = options.find(opt => String(opt.key) === String(unitId));
-        if (matchedOption) return [matchedOption];
+    if (
+      unitId &&
+      (info.type === "select" || info.type === "facility_multiselect")
+    ) {
+      const matchedOption = options.find(
+        (opt) => String(opt.key) === String(unitId),
+      );
+      if (matchedOption) return [matchedOption];
     }
-    
+
     return options;
   }, [info.option, apiOptions, info.type]);
 
@@ -147,7 +167,10 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
           value: new Date().toISOString(),
         });
         initializedKey.current = fieldKey;
-      } else if (info.type === "select" || info.type === "facility_multiselect") {
+      } else if (
+        info.type === "select" ||
+        info.type === "facility_multiselect"
+      ) {
         const unitId = user?.unit;
         if (unitId) {
           const matchedOption = selectOptions.find(
@@ -163,14 +186,25 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
         initializedKey.current = fieldKey;
       }
     }
-  }, [info.type, info.key, fieldKey, value?.value, onChange, selectOptions, user]);
+  }, [
+    info.type,
+    info.key,
+    fieldKey,
+    value?.value,
+    onChange,
+    selectOptions,
+    user,
+  ]);
 
-  const isReadOnly = 
-    info.title?.toLowerCase().includes("ngày điền") || 
-    info.value === "ngay_ien" || 
+  const isReadOnly =
+    info.title?.toLowerCase().includes("ngày điền") ||
+    info.value === "ngay_ien" ||
     info.key === "ngay_ien";
 
-  const isLockedToUnit = !!user && user.role !== "admin" && (info.type === "select" || info.type === "facility_multiselect");
+  const isLockedToUnit =
+    !!user &&
+    user.role !== "admin" &&
+    (info.type === "select" || info.type === "facility_multiselect");
 
   const renderField = () => {
     switch (info.type) {
@@ -224,7 +258,9 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
             inputClassName={`${commonInputClass} ${isReadOnly ? "bg-gray-100 cursor-not-allowed opacity-70" : ""}`}
             pt={{
               root: { className: "w-full" },
-              input: { className: `${commonInputClass} ${isReadOnly ? "bg-gray-100 cursor-not-allowed opacity-70" : ""}` },
+              input: {
+                className: `${commonInputClass} ${isReadOnly ? "bg-gray-100 cursor-not-allowed opacity-70" : ""}`,
+              },
             }}
           />
         );
@@ -276,7 +312,7 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
                     // Kết quả: phân biệt dựa trên data, hoặc nội dung message nếu API luôn trả về success = true
                     const msg = (res?.message || "").toLowerCase();
                     let isDeclared = false;
-                    
+
                     if (res?.data !== undefined) {
                       isDeclared = res.data === true;
                     } else if (res?.declared !== undefined) {
@@ -317,37 +353,57 @@ export default function SurveyInfo({ info, fieldKey, value, onChange, error, sur
     <div>
       <div className="mb-2 min-h-[48px]">
         <label className="mb-1 block font-medium text-slate-700">
-          {info.title} {info.isValidate !== false && !isReadOnly && <span className="text-red-500">*</span>}
+          {info.title}{" "}
+          {info.isValidate !== false && !isReadOnly && (
+            <span className="text-red-500">*</span>
+          )}
         </label>
       </div>
       {renderField()}
       {/* Badge trạng thái kiểm tra đơn vị */}
-      {(info.type === "select" || info.type === "facility_multiselect") && checkUnitStatus && (
-        <div className="mt-2">
-          {checkUnitStatus === "checking" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-              Đang kiểm tra...
-            </span>
-          )}
-          {checkUnitStatus === "declared" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-              <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              {checkUnitMessage || "Đơn vị này đã khai báo rồi"}
-            </span>
-          )}
-          {checkUnitStatus === "not_declared" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              {checkUnitMessage || "Đơn vị chưa khai báo"}
-            </span>
-          )}
-        </div>
-      )}
+      {(info.type === "select" || info.type === "facility_multiselect") &&
+        checkUnitStatus && (
+          <div className="mt-2">
+            {checkUnitStatus === "checking" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                Đang kiểm tra...
+              </span>
+            )}
+            {checkUnitStatus === "declared" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {checkUnitMessage || "Đơn vị này đã khai báo rồi"}
+              </span>
+            )}
+            {checkUnitStatus === "not_declared" && checkUnitMessage && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {checkUnitMessage}
+              </span>
+            )}
+          </div>
+        )}
       {error && (
         <div className="mt-2 text-sm text-red-500">
           Vui lòng nhập thông tin này
