@@ -109,25 +109,30 @@ const FacilityForm: React.FC<FacilityFormProps> = ({
         longitude: formData.longitude !== "" ? Number(formData.longitude) : null,
       };
 
+      let res;
       if (initialData?.id) {
-        await api.put(`/social-facilities/${initialData.id}`, payload);
+        res = await api.put(`/social-facilities/${initialData.id}`, payload);
       } else {
-        await api.post("/social-facilities", payload);
+        res = await api.post("/social-facilities", payload);
       }
       
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: initialData ? "Cập nhật thành công" : "Thêm mới thành công",
-      });
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: initialData ? "Cập nhật thành công" : "Thêm mới thành công",
+        });
+      }
       onSave();
     } catch (error: any) {
       console.error("Error saving facility:", error);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: `Không thể lưu: ${error.message}`,
-      });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể lưu thông tin cơ sở",
+        });
+      }
     } finally {
       setLoading(false);
     }

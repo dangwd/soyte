@@ -74,22 +74,27 @@ const AdminWorkSchedule: React.FC = () => {
     >,
   ) => {
     try {
+      let res;
       if (editingSchedule?.id) {
-        await updateSchedule(editingSchedule.id, scheduleData);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Cập nhật lịch trình thành công!",
-          life: 3000,
-        });
+        res = await updateSchedule(editingSchedule.id, scheduleData);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Cập nhật lịch trình thành công!",
+            life: 3000,
+          });
+        }
       } else {
-        await createSchedule(scheduleData);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Tạo lịch trình mới thành công!",
-          life: 3000,
-        });
+        res = await createSchedule(scheduleData);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Tạo lịch trình mới thành công!",
+            life: 3000,
+          });
+        }
       }
       handleCloseForm();
       fetchSchedules({
@@ -99,12 +104,14 @@ const AdminWorkSchedule: React.FC = () => {
         limit: rows,
       });
     } catch (err: any) {
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: `Lỗi: ${err.message || "Không thể lưu lịch trình."}`,
-        life: 3000,
-      });
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể lưu lịch trình.",
+          life: 3000,
+        });
+      }
     }
   };
 
@@ -120,24 +127,28 @@ const AdminWorkSchedule: React.FC = () => {
       rejectClassName: "p-2",
       accept: async () => {
         try {
-          await deleteSchedule(id);
-          toast.current?.show({
-            severity: "success",
-            summary: "Thành công",
-            detail: "Xóa lịch trình thành công!",
-            life: 3000,
-          });
+          const res = await deleteSchedule(id);
+          if (!res?.message) {
+            toast.current?.show({
+              severity: "success",
+              summary: "Thành công",
+              detail: "Xóa lịch trình thành công!",
+              life: 3000,
+            });
+          }
           fetchSchedules({
             status: filterStatus === "all" ? undefined : filterStatus,
             searchTerm: searchTerm,
           });
         } catch (err: any) {
-          toast.current?.show({
-            severity: "error",
-            summary: "Lỗi",
-            detail: `Lỗi: ${err.message || "Không thể xóa lịch trình."}`,
-            life: 3000,
-          });
+          if (err.message && err.message.includes("API Error")) {
+            toast.current?.show({
+              severity: "error",
+              summary: "Lỗi",
+              detail: "Không thể xóa lịch trình.",
+              life: 3000,
+            });
+          }
         }
       },
     });

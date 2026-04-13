@@ -155,28 +155,34 @@ const PermissionsManagement: React.FC = () => {
     setSubmitting(true);
     try {
       if (editingPermission) {
-        await api.updatePermission(editingPermission.id, formData);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Cập nhật quyền thành công",
-        });
+        const res = await api.updatePermission(editingPermission.id, formData);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Cập nhật quyền thành công",
+          });
+        }
       } else {
-        await api.createPermission(formData);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Thêm mới quyền thành công",
-        });
+        const res = await api.createPermission(formData);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Thêm mới quyền thành công",
+          });
+        }
       }
       setIsFormOpen(false);
       fetchPermissions();
     } catch (error: any) {
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: error.message || "Có lỗi xảy ra khi lưu thông tin",
-      });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Có lỗi xảy ra khi lưu thông tin",
+        });
+      }
     } finally {
       setSubmitting(false);
     }

@@ -110,19 +110,23 @@ const SocialFacilitiesManagement = () => {
       icon: "pi pi-exclamation-triangle",
       accept: async () => {
         try {
-          await api.delete(`/social-facilities/${id}`);
-          toast.current?.show({
-            severity: "success",
-            summary: "Thành công",
-            detail: "Đã xóa cơ sở y tế",
-          });
+          const res = await api.delete(`/social-facilities/${id}`);
+          if (!res?.message) {
+            toast.current?.show({
+              severity: "success",
+              summary: "Thành công",
+              detail: "Đã xóa cơ sở y tế",
+            });
+          }
           fetchFacilities();
-        } catch (error) {
-          toast.current?.show({
-            severity: "error",
-            summary: "Lỗi",
-            detail: "Lỗi khi xóa cơ sở y tế",
-          });
+        } catch (error: any) {
+          if (error.message && error.message.includes("API Error")) {
+            toast.current?.show({
+              severity: "error",
+              summary: "Lỗi",
+              detail: "Lỗi khi xóa cơ sở y tế",
+            });
+          }
         }
       },
     });

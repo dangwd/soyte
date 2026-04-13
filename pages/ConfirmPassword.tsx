@@ -82,29 +82,35 @@ const ConfirmPassword: React.FC = () => {
       
       if (response.token) {
         await login(response.token);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Mật khẩu đã được cập nhật. Đang đăng nhập...",
-        });
+        if (!response.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Mật khẩu đã được cập nhật. Đang đăng nhập...",
+          });
+        }
         setTimeout(() => navigate("/admin/dashboard"), 1500);
       } else {
         setSuccess(true);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Mật khẩu đã được cập nhật thành công",
-        });
+        if (!response.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Mật khẩu đã được cập nhật thành công",
+          });
+        }
         setTimeout(() => navigate("/login"), 3000);
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Không thể cập nhật mật khẩu. Vui lòng thử lại.");
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: err.message || "Cập nhật mật khẩu thất bại",
-      });
+      setError(err.message && !err.message.includes("API Error") ? err.message : "Không thể cập nhật mật khẩu. Vui lòng thử lại.");
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Cập nhật mật khẩu thất bại",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

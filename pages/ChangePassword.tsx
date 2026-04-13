@@ -48,20 +48,22 @@ const ChangePassword: React.FC = () => {
     setError("");
     setIsLoading(true);
     try {
-      await api.changePassword({
+      const res = await api.changePassword({
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
       });
       setSuccess(true);
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Mật khẩu của bạn đã được thay đổi thành công",
-      });
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Mật khẩu của bạn đã được thay đổi thành công",
+        });
+      }
       setTimeout(() => navigate(-1), 3000);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Không thể cập nhật mật khẩu. Vui lòng kiểm tra lại mật khẩu cũ.");
+      setError(err.message && !err.message.includes("API Error") ? err.message : "Không thể cập nhật mật khẩu. Vui lòng kiểm tra lại mật khẩu cũ.");
     } finally {
       setIsLoading(false);
     }

@@ -107,19 +107,23 @@ const AdminDashboard = () => {
       icon: "pi pi-exclamation-triangle",
       accept: async () => {
         try {
-          await api.delete(`/posts/${id}`);
+          const res = await api.delete(`/posts/${id}`);
+          if (!res?.message) {
+            toast.current?.show({
+              severity: "success",
+              summary: "Thành công",
+              detail: "Bài viết đã được xóa",
+            });
+          }
           setPosts(posts.filter((p) => p.id !== id));
-          toast.current?.show({
-            severity: "success",
-            summary: "Thành công",
-            detail: "Bài viết đã được xóa",
-          });
-        } catch (error) {
-          toast.current?.show({
-            severity: "error",
-            summary: "Lỗi",
-            detail: "Lỗi khi xóa bài viết",
-          });
+        } catch (error: any) {
+          if (error.message && error.message.includes("API Error")) {
+            toast.current?.show({
+              severity: "error",
+              summary: "Lỗi",
+              detail: "Lỗi khi xóa bài viết",
+            });
+          }
           console.error(error);
         }
       },

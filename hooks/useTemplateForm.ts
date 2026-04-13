@@ -109,19 +109,31 @@ export const useTemplateForm = (
         status: template.status ? 'active' : 'inactive'
       };
 
+      let res;
       if (id) {
-        await formService.updateForm(id, payload);
+        res = await formService.updateForm(id, payload);
       } else {
-        await formService.createForm(payload);
+        res = await formService.createForm(payload);
       }
-      console.log(template.type)
-      toastRef.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã lưu biểu mẫu' });
+      if (!res?.message) {
+        toastRef.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Đã lưu biểu mẫu",
+        });
+      }
       setTimeout(() => {
         navigate(template.type ? `/admin/templates/${template.type}` : '/admin/templates');
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toastRef.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi lưu biểu mẫu' });
+      if (error.message && error.message.includes("API Error")) {
+        toastRef.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Lỗi khi lưu biểu mẫu",
+        });
+      }
     } finally {
       setLoading(false);
     }

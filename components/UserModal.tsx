@@ -364,17 +364,20 @@ const UserModal: React.FC<UserModalProps> = ({
         permissions: hierarchicalPermissions,
       };
 
+      let res;
       if (isEdit && user) {
-        await api.updateUser(user.id, dataToSubmit);
+        res = await api.updateUser(user.id, dataToSubmit);
       } else {
-        await api.register(dataToSubmit);
+        res = await api.register(dataToSubmit);
       }
 
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: isEdit ? "Cập nhật người dùng thành công" : "Thêm người dùng mới thành công",
-      });
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: isEdit ? "Cập nhật người dùng thành công" : "Thêm người dùng mới thành công",
+        });
+      }
 
       setTimeout(() => {
         onSaveSuccess();
@@ -382,11 +385,13 @@ const UserModal: React.FC<UserModalProps> = ({
       }, 1000);
     } catch (error: any) {
       console.error("Error saving user:", error);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: error.response?.data?.message || "Không thể lưu thông tin người dùng",
-      });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể lưu thông tin người dùng",
+        });
+      }
     } finally {
       setIsSaving(false);
     }

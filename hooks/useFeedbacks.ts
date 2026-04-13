@@ -93,12 +93,24 @@ export const useFeedbacks = (type?: string, toastRef?: React.RefObject<Toast | n
   const deleteFeedback = async (id: string) => {
     try {
       setLoading(true);
-      await feedBacksSevice.deleteFeedBack(id);
-      toastRef?.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã xoá phản hồi' });
+      const res = await feedBacksSevice.deleteFeedBack(id);
+      if (!res?.message) {
+        toastRef?.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Đã xoá phản hồi",
+        });
+      }
       await fetchFeedbacks();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toastRef?.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xoá phản hồi' });
+      if (error.message && error.message.includes("API Error")) {
+        toastRef?.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể xoá phản hồi",
+        });
+      }
     } finally {
       setLoading(false);
     }

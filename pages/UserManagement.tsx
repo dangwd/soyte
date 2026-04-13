@@ -64,23 +64,27 @@ const UserManagement: React.FC = () => {
       rejectClassName: "!text-gray-600 hover:!bg-gray-50 !px-6 !py-2.5 !rounded-xl !font-black !border-none !transition-all",
       accept: async () => {
         try {
-          await api.updateUser(userId, { status: 0 });
+          const res = await api.updateUser(userId, { status: 0 });
           setUsers(
             users?.map((u) =>
               u.id === userId ? { ...u, status: 0 as 0 | 1 } : u,
             ),
           );
-          toast.current?.show({
-            severity: "success",
-            summary: "Thành công",
-            detail: "Đã vô hiệu hóa người dùng",
-          });
-        } catch (err) {
-          toast.current?.show({
-            severity: "error",
-            summary: "Lỗi",
-            detail: "Không thể vô hiệu hóa người dùng.",
-          });
+          if (!res?.message) {
+            toast.current?.show({
+              severity: "success",
+              summary: "Thành công",
+              detail: "Đã vô hiệu hóa người dùng",
+            });
+          }
+        } catch (err: any) {
+          if (err.message && err.message.includes("API Error")) {
+            toast.current?.show({
+              severity: "error",
+              summary: "Lỗi",
+              detail: "Không thể vô hiệu hóa người dùng.",
+            });
+          }
           console.error(err);
         }
       },
@@ -90,18 +94,22 @@ const UserManagement: React.FC = () => {
   const handleResendEmail = async (user: User) => {
     try {
       if (!user.email) return;
-      await api.resendVerification(user.email);
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Đã gửi lại email xác thực mật khẩu.",
-      });
-    } catch (err) {
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể gửi lại email.",
-      });
+      const res = await api.resendVerification(user.email);
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Đã gửi lại email xác thực mật khẩu.",
+        });
+      }
+    } catch (err: any) {
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể gửi lại email.",
+        });
+      }
       console.error(err);
     }
   };

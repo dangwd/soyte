@@ -135,29 +135,35 @@ const SurveysManagement: React.FC = () => {
     try {
       const surveyId = survey.key || survey.id;
       if (surveyId) {
-        await surveyService.updateSurvey(surveyId, payload);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Đã cập nhật cuộc khảo sát",
-        });
+        const res = await surveyService.updateSurvey(surveyId, payload);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Đã cập nhật cuộc khảo sát",
+          });
+        }
       } else {
-        await surveyService.createSurvey(payload);
-        toast.current?.show({
-          severity: "success",
-          summary: "Thành công",
-          detail: "Đã tạo cuộc khảo sát mới",
-        });
+        const res = await surveyService.createSurvey(payload);
+        if (!res?.message) {
+          toast.current?.show({
+            severity: "success",
+            summary: "Thành công",
+            detail: "Đã tạo cuộc khảo sát mới",
+          });
+        }
       }
       setSurveyDialog(false);
       fetchSurveys();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể lưu cuộc khảo sát",
-      });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể lưu cuộc khảo sát",
+        });
+      }
     }
   };
 
@@ -174,23 +180,27 @@ const SurveysManagement: React.FC = () => {
   const toggleStatus = async (rowData: any) => {
     try {
       const newStatus = !rowData.status;
-      await surveyService.updateSurvey(rowData.id, {
+      const res = await surveyService.updateSurvey(rowData.id, {
         ...rowData,
         status: newStatus,
       });
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Đã cập nhật trạng thái",
-      });
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Đã cập nhật trạng thái",
+        });
+      }
       fetchSurveys();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể cập nhật trạng thái",
-      });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể cập nhật trạng thái",
+        });
+      }
     }
   };
 

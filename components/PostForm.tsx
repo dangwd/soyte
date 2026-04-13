@@ -73,12 +73,24 @@ const PostForm: React.FC<PostFormProps> = ({
     setUploading(true);
     try {
       const data = await api.upload(file);
+      if (!data?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Tải ảnh lên thành công",
+        });
+      }
       setFormData((prev) => ({ ...prev, imageUrl: data.url }));
-      toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Tải ảnh lên thành công' });
       setUploading(false);
     } catch (err: any) {
       console.error("Upload error:", err);
-      toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: "Lỗi tải ảnh: " + err.message });
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Lỗi tải ảnh công vụ",
+        });
+      }
       setUploading(false);
     }
   };
@@ -114,16 +126,29 @@ const PostForm: React.FC<PostFormProps> = ({
         image_url: formData.imageUrl,
       };
 
+      let res;
       if (initialData?.id) {
-        await api.put(`/posts/${initialData.id}`, postData);
+        res = await api.put(`/posts/${initialData.id}`, postData);
       } else {
-        await api.post("/posts", postData);
+        res = await api.post("/posts", postData);
       }
-      toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Lưu bài viết thành công' });
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Lưu bài viết thành công",
+        });
+      }
       onSave();
     } catch (error: any) {
       console.error("Error saving post:", error);
-      toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: `Lỗi lưu bài viết: ${error.message}` });
+      if (error.message && error.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Lỗi lưu bài viết",
+        });
+      }
     } finally {
       setLoading(false);
     }

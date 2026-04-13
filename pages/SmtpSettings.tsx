@@ -64,19 +64,23 @@ const SmtpSettings: React.FC = () => {
 
     setIsSaving(true);
     try {
-      await api.updateSmtpConfig(config);
-      toast.current?.show({
-        severity: "success",
-        summary: "Thành công",
-        detail: "Đã cập nhật cấu hình SMTP",
-      });
-    } catch (err) {
+      const res = await api.updateSmtpConfig(config);
+      if (!res?.message) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Thành công",
+          detail: "Đã cập nhật cấu hình SMTP",
+        });
+      }
+    } catch (err: any) {
       console.error("Failed to update SMTP config:", err);
-      toast.current?.show({
-        severity: "error",
-        summary: "Lỗi",
-        detail: "Không thể lưu cấu hình SMTP",
-      });
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Không thể lưu cấu hình SMTP",
+        });
+      }
     } finally {
       setIsSaving(false);
     }
