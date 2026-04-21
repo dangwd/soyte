@@ -43,22 +43,20 @@ export default function SurveyInfo({
   const commonInputClass = `
   w-full ${INPUT_HEIGHT} rounded-xl border bg-white px-4 text-[15px] text-slate-700
   shadow-sm outline-none transition-all duration-200
-  ${
-    error
+  ${error
       ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100"
       : "border-slate-300 hover:border-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-  }
+    }
 `;
 
   const dropdownPt = {
     root: {
       className: `
       w-full ${INPUT_HEIGHT} rounded-xl border bg-white text-[15px] text-slate-700 shadow-sm transition-all duration-200
-      ${
-        error
+      ${error
           ? "border-red-500 ring-2 ring-red-100"
           : "border-slate-300 hover:border-slate-400 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100"
-      }
+        }
     `,
     },
     input: {
@@ -78,11 +76,10 @@ export default function SurveyInfo({
     item: ({ context }) => ({
       className: `
       px-4 py-2 text-[14px] cursor-pointer transition-colors
-      ${
-        context.selected
+      ${context.selected
           ? "bg-blue-500 text-white"
           : "text-slate-700 hover:bg-blue-50"
-      }
+        }
     `,
     }),
     filterInput: {
@@ -126,7 +123,8 @@ export default function SurveyInfo({
     if (info.option?.length) options = info.option;
     else if (apiOptions.length > 0) options = apiOptions;
 
-    const unitId = localStorage.getItem("unit_id");
+    const unitId = user?.unit;
+
     if (
       unitId &&
       (info.type === "select" || info.type === "facility_multiselect")
@@ -134,11 +132,13 @@ export default function SurveyInfo({
       const matchedOption = options.find(
         (opt) => String(opt.key) === String(unitId),
       );
-      if (matchedOption) return [matchedOption];
+      if (matchedOption) {
+        return [matchedOption];
+      }
     }
-
     return options;
-  }, [info.option, apiOptions, info.type]);
+
+  }, [info.option, apiOptions, info.type, user]);
 
   const filteredOptions = useMemo(() => {
     const keyword = searchText.trim().toLowerCase();
@@ -160,6 +160,9 @@ export default function SurveyInfo({
   const initializedKey = useRef<string | null>(null);
 
   useEffect(() => {
+    // Nếu đang tải dữ liệu thì không thực hiện khởi tạo để tránh bị undefined
+    if (loading) return;
+
     if (!value?.value && initializedKey.current !== fieldKey) {
       if (info.type === "date") {
         onChange(fieldKey, {
@@ -176,14 +179,19 @@ export default function SurveyInfo({
           const matchedOption = selectOptions.find(
             (opt) => String(opt.key) === String(unitId),
           );
+          
           if (matchedOption) {
             onChange(fieldKey, {
               key: info.key,
               value: matchedOption,
             });
+            // Chỉ đánh dấu đã khởi tạo thành công khi đã gán được giá trị
+            initializedKey.current = fieldKey;
           }
+        } else {
+          // Nếu user không có unit (ví dụ Admin), cũng đánh dấu đã khởi tạo để không quét lại
+          initializedKey.current = fieldKey;
         }
-        initializedKey.current = fieldKey;
       }
     }
   }, [
@@ -194,6 +202,7 @@ export default function SurveyInfo({
     onChange,
     selectOptions,
     user,
+    loading
   ]);
 
   const isReadOnly =

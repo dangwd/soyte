@@ -32,10 +32,31 @@ const Report_DCBC = () => {
   const [surveys, setSurveys] = useState<any[]>([]);
   const [selectedSurveyKey, setSelectedSurveyKey] = useState<string>("");
 
-  const { filterType, dateFilter, handleFilterChange, handleCustomDateChange } =
-    useReportFilter();
+  const { 
+    filterType, 
+    dateFilter, 
+    finalUnit,
+    finalUnitType,
+    isFilterLoading,
+    handleFilterChange, 
+    handleCustomDateChange,
+  } = useReportFilter();
+
+  const userFacilities = useMemo(() => {
+    if (!facilities.length || isFilterLoading) return [];
+    let filtered = [...facilities];
+    if (finalUnitType) {
+      filtered = filtered.filter(f => (f.type || "").toString().toUpperCase().trim() === finalUnitType.toUpperCase().trim());
+    }
+    if (finalUnit) {
+      const unitIds = finalUnit.split(',').map(id => id.trim());
+      filtered = filtered.filter(f => unitIds.includes(String(f.id)));
+    }
+    return filtered;
+  }, [facilities, finalUnit, finalUnitType, isFilterLoading]);
 
   const fetchAllFeedbacks = async () => {
+    if (isFilterLoading) return;
     try {
       setLoading(true);
       const response = await feedBacksSevice.fetchFeedBacksByType(
@@ -43,6 +64,8 @@ const Report_DCBC = () => {
         dateFilter.startDate,
         dateFilter.endDate,
         selectedSurveyKey,
+        finalUnit,
+        finalUnitType
       );
       const data = response.data || response;
       let list: any[] = [];
@@ -69,7 +92,7 @@ const Report_DCBC = () => {
 
   useEffect(() => {
     fetchAllFeedbacks();
-  }, [dateFilter.startDate, dateFilter.endDate, selectedSurveyKey]);
+  }, [dateFilter.startDate, dateFilter.endDate, selectedSurveyKey, finalUnit, finalUnitType]);
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -98,14 +121,14 @@ const Report_DCBC = () => {
 
     feedbacks.forEach((fb) => {
       const fId = String(fb.form_id || "unknown");
-      
+
       // Xác định title cho group nếu chưa có
       if (!groups[fId]) {
         let title = "";
         if (Number(fId) === 3) title = "Khối các bệnh viện trực thuộc";
         else if (Number(fId) === 17) title = "Đơn vị trợ giúp xã hội trực thuộc";
         else if (Number(fId) === 18) title = "Khối các trạm y tế xã, phường";
-        
+
         groups[fId] = {
           title: title || fb.info?.title || `Mẫu phản ánh (${fId})`,
           items: [],
@@ -114,8 +137,8 @@ const Report_DCBC = () => {
       }
 
       // Xác định key duy nhất cho đơn vị để khử trùng
-      const unitKey = getReportedFacilityId(fb, facilities) || `fb-${fb.id}`;
-      
+      const unitKey = getReportedFacilityId(fb, userFacilities) || `fb-${fb.id}`;
+
       const existing = formUnitMap[fId][unitKey];
       if (!existing) {
         formUnitMap[fId][unitKey] = fb;
@@ -135,7 +158,7 @@ const Report_DCBC = () => {
     });
 
     return groups;
-  }, [feedbacks, facilities]);
+  }, [feedbacks, userFacilities]);
 
   // Tự động tải template cho tất cả các form có trong dữ liệu báo cáo
   useEffect(() => {
@@ -173,7 +196,7 @@ const Report_DCBC = () => {
     await exportReportToPDF(
       groupedFeedbacks,
       formTemplates,
-      facilities,
+      userFacilities,
       dateFilter,
       setLoading,
       (msg) =>
@@ -191,7 +214,7 @@ const Report_DCBC = () => {
     await exportReportToWord(
       groupedFeedbacks,
       formTemplates,
-      facilities,
+      userFacilities,
       dateFilter,
       setLoading,
       (msg) =>
@@ -273,10 +296,10 @@ const Report_DCBC = () => {
             </div>
 
             {/* Phụ lục danh sách các đơn vị */}
-            <ReportAppendix 
-              groupedFeedbacks={groupedFeedbacks} 
-              formTemplates={formTemplates} 
-              type="DCBC" 
+            <ReportAppendix
+              groupedFeedbacks={groupedFeedbacks}
+              formTemplates={formTemplates}
+              type="DCBC"
               surveys={surveys}
               selectedSurveyKey={selectedSurveyKey}
               dateFilter={dateFilter}

@@ -8,22 +8,41 @@ export interface DateFilter {
     endDate: string;
 }
 
-export function useKSHLData(dateFilter: DateFilter, surveyKey?: string) {
+export function useKSHLData(dateFilter: DateFilter, surveyKey?: string, unit?: string, unitType?: string, isFilterLoading?: boolean) {
     const [rawFeedbacks, setRawFeedbacks] = useState<any[]>([]);
     const [forms, setForms] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { facilities } = useFacilities();
-    const allUnits = facilities;
+    const { facilities, loading: facilitiesLoading } = useFacilities();
+    
+    const allUnits = useMemo(() => {
+        if (!facilities.length || isFilterLoading) return [];
+        
+        let filtered = [...facilities];
+        
+        // Lọc theo loại hình nếu có
+        if (unitType) {
+            filtered = filtered.filter(f => (f.type || "").toString().toUpperCase().trim() === String(unitType).toUpperCase().trim());
+        }
+        
+        // Lọc theo danh sách đơn vị cụ thể nếu có
+        if (unit && unit !== 'none') {
+            const unitIds = unit.split(',').map(id => id.trim());
+            filtered = filtered.filter(f => unitIds.includes(String(f.id)));
+        }
+        
+        return filtered;
+    }, [facilities, unit, unitType, isFilterLoading]);
 
     useEffect(() => {
         const fetchData = async () => {
+            if (isFilterLoading) return;
             setLoading(true);
             setError(null);
             try {
                 const [fbRes, formRes] = await Promise.all([
-                    feedBacksSevice.fetchFeedBacksByType('evaluate', dateFilter.startDate, dateFilter.endDate, surveyKey),
+                    feedBacksSevice.fetchFeedBacksByType('evaluate', dateFilter.startDate, dateFilter.endDate, surveyKey, unit, unitType),
                     formService.fetchForms(1, 1000, 'evaluate')
                 ]);
 
@@ -40,7 +59,7 @@ export function useKSHLData(dateFilter: DateFilter, surveyKey?: string) {
             }
         };
         fetchData();
-    }, [dateFilter, surveyKey]);
+    }, [dateFilter, surveyKey, unit, unitType]);
 
     const processedData = useMemo(() => {
         if (!rawFeedbacks.length) {
@@ -178,9 +197,9 @@ export function useKSHLData(dateFilter: DateFilter, surveyKey?: string) {
         const displayRate = (val: number) => val > 0 ? val.toFixed(2) : "0";
         const formatNumber = (n: number) => n.toLocaleString('vi-VN');
 
-        const publicHospitals = facilities.filter(u => u.type === 'BV' && u.category !== "Cơ sở y tế tư nhân");
-        const privateHospitals = facilities.filter(u => u.type === 'BV' && u.category === "Cơ sở y tế tư nhân");
-        const tytUnits = facilities.filter(u => u.type === 'TYT');
+        const publicHospitals = allUnits.filter(u => u.type === 'BV' && u.category !== "Cơ sở y tế tư nhân");
+        const privateHospitals = allUnits.filter(u => u.type === 'BV' && u.category === "Cơ sở y tế tư nhân");
+        const tytUnits = allUnits.filter(u => u.type === 'TYT');
 
         // Tạo dữ liệu bảng tổng hợp (8 cột)
         const createSummaryData = (units: any[], surveyType: string, label: string) => {

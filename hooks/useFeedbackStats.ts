@@ -3,7 +3,7 @@ import { feedBacksSevice } from '../services/feedBacksSevice';
 import { Toast } from 'primereact/toast';
 import { DashboardStats } from '../types/DashboardStats';
 
-export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string | string[]) => {
+export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast | null>, surveyKey?: string | string[], unit?: string, unitType?: string, isFilterLoading?: boolean) => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
@@ -12,9 +12,10 @@ export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast
   }, [type]);
 
   const fetchDashboardStats = useCallback(async (payload: { startDate: string, endDate: string }) => {
+    if (isFilterLoading) return;
     try {
       setLoading(true);
-      const response = await feedBacksSevice.fetchStats(payload, type, surveyKey);
+      const response = await feedBacksSevice.fetchStats(payload, type, surveyKey, unit, unitType);
       const data = response.data?.data || response.data;
       setStats(data);
     } catch (error) {
@@ -27,7 +28,7 @@ export const useFeedbackStats = (type?: string, toastRef?: React.RefObject<Toast
     } finally {
       setLoading(false);
     }
-  }, [toastRef, type, surveyKey]);
+  }, [toastRef, type, surveyKey, unit, unitType, isFilterLoading]);
 
   // Tính toán phần trăm cho biểu đồ
   const totalTiendo = stats && stats.reflect ? (stats.reflect.tiendo.daLam + stats.reflect.tiendo.dangLam + stats.reflect.tiendo.chuaLam) : 0;

@@ -10,6 +10,7 @@ import { FeedbackStatsSection } from "../components/feedbacks/FeedbackStatsSecti
 import { FeedbackDataTable } from "../components/feedbacks/FeedbackDataTable";
 import { FeedbackDetailsDialog } from "../components/feedbacks/FeedbackDetailsDialog";
 import { surveyService } from "@/services/surveyService";
+import { useReportFilter } from "@/hooks/useReportFilter";
 
 const ALLOWED_TYPES = ["evaluate", "reflect"] as const;
 type FormType = (typeof ALLOWED_TYPES)[number];
@@ -24,8 +25,16 @@ const FeedbacksManagement: React.FC = () => {
     //return <Navigate to="/404" replace />;
     return <Navigate to="/admin" replace />;
   }
-  const [dateFilter, setDateFilter] = useState<{ startDate: string, endDate: string }>(getDefaultDates());
-  const [filterType, setFilterType] = useState<string>("this_year");
+  const { 
+    filterType, 
+    dateFilter, 
+    finalUnit,
+    finalUnitType,
+    isFilterLoading,
+    handleFilterChange, 
+    handleCustomDateChange,
+  } = useReportFilter();
+
   const [surveys, setSurveys] = useState<any[]>([]);
   const [selectedSurveyKeys, setSelectedSurveyKeys] = useState<string[]>([]);
 
@@ -41,7 +50,7 @@ const FeedbacksManagement: React.FC = () => {
     viewDetails,
     deleteFeedback,
     setDialogVisible,
-  } = useFeedbacks(type, toast, selectedSurveyKeys);
+  } = useFeedbacks(type, toast, selectedSurveyKeys, finalUnit, finalUnitType, isFilterLoading);
 
   const {
     stats,
@@ -51,62 +60,7 @@ const FeedbacksManagement: React.FC = () => {
     danhgiaChartData,
     barChartData,
     getPercentValue,
-  } = useFeedbackStats(type, toast, selectedSurveyKeys);
-
-  const handleFilterChange = (newType: string) => {
-    setFilterType(newType);
-    const now = new Date();
-    const year = now.getFullYear();
-    const formatDate = (date: Date) => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    };
-
-    let start = new Date();
-    let end = new Date();
-
-    if (newType === 'this_month') {
-      start = new Date(year, now.getMonth(), 1);
-      end = new Date(year, now.getMonth() + 1, 0);
-    } else if (newType === 'last_month') {
-      start = new Date(year, now.getMonth() - 1, 1);
-      end = new Date(year, now.getMonth(), 0);
-    } else if (newType === 'first_half') {
-      start = new Date(year, 0, 1);
-      end = new Date(year, 5, 30);
-    } else if (newType === 'this_year') {
-      start = new Date(year, now.getMonth() - 11, 1);
-      end = new Date(year, now.getMonth() + 1, 0);
-    } else if (newType === 'second_half') {
-      start = new Date(year, 6, 1);
-      end = new Date(year, 11, 31);
-    } else if (newType === 'custom') {
-      return;
-    }
-
-    setDateFilter({
-      startDate: formatDate(start),
-      endDate: formatDate(end)
-    });
-  };
-
-  const handleCustomDateChange = (date: Date | null, field: 'startDate' | 'endDate') => {
-    if (date) {
-      const formatDate = (d: Date) => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const d_str = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d_str}`;
-      };
-
-      setDateFilter(prev => ({
-        ...prev,
-        [field]: formatDate(date)
-      }));
-    }
-  };
+  } = useFeedbackStats(type, toast, selectedSurveyKeys, finalUnit, finalUnitType, isFilterLoading);
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -123,8 +77,10 @@ const FeedbacksManagement: React.FC = () => {
   }, [type]);
 
   useEffect(() => {
-    fetchDashboardStats(dateFilter);
-  }, [dateFilter, type, fetchDashboardStats, selectedSurveyKeys]);
+    if (!isFilterLoading) {
+      fetchDashboardStats(dateFilter);
+    }
+  }, [dateFilter, type, fetchDashboardStats, selectedSurveyKeys, isFilterLoading]);
 
   return (
     <AdminLayout title="Quản lý góp ý - phản hồi">

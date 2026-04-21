@@ -51,16 +51,13 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
 
   return (
     <div className="flex flex-col gap-6 mb-8 bg-white p-6 md:p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100/80 transition-all hover:shadow-2xl hover:shadow-slate-300/40">
-      {/* Header Row: Title & Export Buttons */}
       {reportHeader && (
         <>
           <div className="w-full overflow-hidden">{reportHeader}</div>
-          {/* Divider */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-60" />
         </>
       )}
 
-      {/* Filter Row: Survey, Time, Date */}
       <div className="flex flex-wrap items-center justify-end gap-4">
         {onSurveyChange &&
           (isMulti ? (

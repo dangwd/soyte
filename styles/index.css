@@ -206,4 +206,49 @@
   align-items: center !important;
   height: 100% !important;
 }
+
+/* ── User Modal MultiSelect Chips & Label ── */
+.user-modal-ms .p-multiselect-label {
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 48px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.user-modal-ms .p-multiselect-token {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  margin: 2px !important;
+  border: 1px solid #c7d2fe !important;
+  animation: in 0.2s zoom-in-95 ease-out-back;
+}
+
+.user-modal-ms .p-multiselect-token-icon {
+  margin-left: 8px !important;
+  font-size: 10px !important;
+  color: #6366f1 !important;
+  cursor: pointer !important;
+}
+
+.user-modal-ms .p-multiselect-token-icon:hover {
+  color: #4338ca !important;
+}
+
+.user-modal-ms .p-multiselect-trigger {
+  width: 40px !important;
+}
+
+/* ── Checkbox v10 fallback ── */
+.p-checkbox-box[data-p-highlight="true"] {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
 

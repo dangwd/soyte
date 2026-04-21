@@ -30,10 +30,31 @@ const Report_TCT01 = () => {
     const fetchedTemplatesRef = useRef<Set<string>>(new Set());
     const loadingTemplatesRef = useRef<Set<string>>(new Set());
 
-    const { filterType, dateFilter, handleFilterChange, handleCustomDateChange } =
-        useReportFilter();
+    const {
+        filterType,
+        dateFilter,
+        finalUnit,
+        finalUnitType,
+        isFilterLoading,
+        handleFilterChange,
+        handleCustomDateChange
+    } = useReportFilter();
+
+    const userFacilities = useMemo(() => {
+        if (!facilities.length || isFilterLoading) return [];
+        let filtered = [...facilities];
+        if (finalUnitType) {
+            filtered = filtered.filter(f => (f.type || "").toString().toUpperCase().trim() === finalUnitType.toUpperCase().trim());
+        }
+        if (finalUnit) {
+            const unitIds = finalUnit.split(',').map(id => id.trim());
+            filtered = filtered.filter(f => unitIds.includes(String(f.id)));
+        }
+        return filtered;
+    }, [facilities, finalUnit, finalUnitType, isFilterLoading]);
 
     const fetchAllFeedbacks = async () => {
+        if (isFilterLoading) return;
         try {
             setLoading(true);
             const response = await feedBacksSevice.fetchFeedBacksByType(
@@ -41,6 +62,8 @@ const Report_TCT01 = () => {
                 dateFilter.startDate,
                 dateFilter.endDate,
                 selectedSurveyKey,
+                finalUnit,
+                finalUnitType
             );
             const data = response.data || response;
             let list: any[] = [];
@@ -67,7 +90,7 @@ const Report_TCT01 = () => {
 
     useEffect(() => {
         fetchAllFeedbacks();
-    }, [dateFilter.startDate, dateFilter.endDate, selectedSurveyKey]);
+    }, [dateFilter.startDate, dateFilter.endDate, selectedSurveyKey, finalUnit, finalUnitType]);
 
     useEffect(() => {
         const fetchSurveys = async () => {
@@ -103,9 +126,9 @@ const Report_TCT01 = () => {
         feedbacks.forEach((fb) => {
             const fId = String(fb.form_id);
             if (groups[fId]) {
-                const unitKey = getReportedFacilityId(fb, facilities) || `fb-${fb.id}`;
+                const unitKey = getReportedFacilityId(fb, userFacilities) || `fb-${fb.id}`;
                 const existing = formUnitMap[fId][unitKey];
-                
+
                 if (!existing) {
                     formUnitMap[fId][unitKey] = fb;
                 } else {
@@ -124,7 +147,7 @@ const Report_TCT01 = () => {
         });
 
         return groups;
-    }, [feedbacks, facilities]);
+    }, [feedbacks, userFacilities]);
 
     // Tải template
     useEffect(() => {
@@ -179,7 +202,7 @@ const Report_TCT01 = () => {
             const items = group?.items || [];
             const template = formTemplates[cat.id];
 
-            const totalUnits = calculateTotalUnits(template, facilities);
+            const totalUnits = calculateTotalUnits(template, userFacilities);
             const reportedCount = items.length;
             const notReportedCount = Math.max(0, totalUnits - reportedCount);
             const { onTimeCount, lateCount } = calculateOnTimeStats(items, template);
@@ -209,7 +232,7 @@ const Report_TCT01 = () => {
                             .filter((k): k is string => !!k);
 
                         for (const key of candidateKeys) {
-                            const facility = facilities.find((f: any) => String(f.id) === String(key));
+                            const facility = userFacilities.find((f: any) => String(f.id) === String(key));
                             if (facility) return facility.name;
                         }
 
@@ -222,7 +245,7 @@ const Report_TCT01 = () => {
                         }
                     }
                     const facilityId = fb.info?.facility_id || fb.facility_id;
-                    const facility = facilities.find((f: any) => String(f.id) === String(facilityId));
+                    const facility = userFacilities.find((f: any) => String(f.id) === String(facilityId));
                     return facility ? facility.name : (fb.fullName || fb.name || `Đơn vị (${facilityId || '?'})`);
                 });
                 data[cat.key].danhSach = Array.from(new Set(facilityNames));
@@ -230,7 +253,7 @@ const Report_TCT01 = () => {
         });
 
         return data;
-    }, [feedbacks, formTemplates, groupedFeedbacks, facilities]);
+    }, [feedbacks, formTemplates, groupedFeedbacks, userFacilities]);
 
     const exportToWord = async () => {
         await exportTCT01ToWord(
@@ -293,6 +316,7 @@ const Report_TCT01 = () => {
                     selectedSurveyKey={selectedSurveyKey}
                     onSurveyChange={(val) => setSelectedSurveyKey(val)}
                     isMulti={false}
+
                 />
 
                 {loading ? (

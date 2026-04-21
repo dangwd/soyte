@@ -19,7 +19,7 @@ import {
   Edit3Icon,
 } from "lucide-react";
 import { Toast } from "primereact/toast";
-import { Button, InputText, Dropdown } from "@/components/prime";
+import { Button, InputText, Dropdown, MultiSelect } from "@/components/prime";
 
 interface UserModalProps {
   visible: boolean;
@@ -147,7 +147,7 @@ const UserModal: React.FC<UserModalProps> = ({
           role: user.role || "user",
           status: Number(user.status) as 0 | 1,
           type: type,
-          unit: unit,
+          unit: user.role === "admin" ? (unit && typeof unit === "string" ? unit.split(",") : (Array.isArray(unit) ? unit : [])) : unit,
           us: user.us || "",
           pass: user.pass || "",
           password: "", // Don't show password or populate it
@@ -361,6 +361,7 @@ const UserModal: React.FC<UserModalProps> = ({
 
       const dataToSubmit = {
         ...formData,
+        unit: Array.isArray(formData.unit) ? formData.unit.join(",") : formData.unit,
         permissions: hierarchicalPermissions,
       };
 
@@ -508,7 +509,7 @@ const UserModal: React.FC<UserModalProps> = ({
                         { label: "Người dùng", value: "user" },
                         { label: "Quản trị viên", value: "admin" },
                       ]}
-                      onChange={(e) => setFormData({ ...formData, role: e.value })}
+                      onChange={(e) => setFormData({ ...formData, role: e.value, unit: e.value === "admin" ? [] : "" })}
                       className={`w-full !bg-gray-50 !border-${errors.role ? "red-500" : "gray-200"} !rounded-xl outline-none font-bold text-gray-700`}
                     />
                     {errors.role && <p className="text-red-500 text-[10px] mt-1 font-bold ml-1">{errors.role}</p>}
@@ -563,6 +564,50 @@ const UserModal: React.FC<UserModalProps> = ({
                           className={`w-full !bg-white !border-${errors.unit ? "red-500" : "gray-200"} !rounded-xl outline-none font-bold text-gray-700`}
                         />
                         {errors.unit && <p className="text-red-500 text-[10px] mt-1 font-bold ml-1">{errors.unit}</p>}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formData.role === "admin" && (
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-4 animate-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Loại hình quản lý</label>
+                      <Dropdown
+                        value={formData.type}
+                        options={[
+                          { label: "Bệnh viện", value: "BV" },
+                          { label: "Trung tâm y tế", value: "TT" },
+                          { label: "Bảo trợ xã hội", value: "BT" },
+                          { label: "Trạm y tế", value: "TYT" },
+                          { label: "Cấp cứu 115", value: "CC" },
+                        ]}
+                        onChange={(e) => {
+                          const newType = e.value;
+                          const options = getFacilityOptions(newType);
+                          const allUnitIds = options.map((o) => o.value);
+                          setFormData({ ...formData, type: newType, unit: allUnitIds });
+                        }}
+                        placeholder="-- Chọn loại hình --"
+                        className="w-full !bg-white !border-gray-200 !rounded-xl outline-none font-bold text-gray-700"
+                      />
+                    </div>
+
+                    {formData.type && (
+                      <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 ml-1">Đơn vị quản lý</label>
+                        <MultiSelect
+                          value={formData.unit}
+                          options={getFacilityOptions(formData.type)}
+                          onChange={(e) => setFormData({ ...formData, unit: e.value })}
+                          placeholder="-- Chọn đơn vị --"
+                          filter
+                          filterPlaceholder="Tìm kiếm tên đơn vị..."
+                          className="w-full !bg-white !border-gray-200 !rounded-xl outline-none font-bold text-gray-700 user-modal-ms h-[48px]"
+                          panelClassName="facility-ms-panel"
+                          maxSelectedLabels={3}
+                          selectedItemsLabel="{0} đơn vị đã chọn"
+                        />
                       </div>
                     )}
                   </div>

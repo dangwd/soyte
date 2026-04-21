@@ -9,14 +9,24 @@ import { useKSHLData } from "@/hooks/useKSHLData";
 import { ReportHeader } from "@/components/report/ReportHeader";
 import { useReportFilter } from "@/hooks/useReportFilter";
 import { surveyService } from "@/services/surveyService";
+import { useAuth } from "@/AuthContext";
 
 const Report_KSHL = () => {
   const toast = useRef<Toast>(null);
   const [surveys, setSurveys] = useState<any[]>([]);
   const [selectedSurveyKey, setSelectedSurveyKey] = useState<string>("");
 
-  const { filterType, dateFilter, handleFilterChange, handleCustomDateChange } =
-    useReportFilter();
+  const { 
+    filterType, 
+    dateFilter, 
+    finalUnit,
+    finalUnitType,
+    isFilterLoading,
+    handleFilterChange, 
+    handleCustomDateChange 
+  } = useReportFilter();
+
+  const user = useAuth();
 
   // --- Trạng thái ẩn/hiện bảng ---
   const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>(
@@ -36,6 +46,9 @@ const Report_KSHL = () => {
   const { processedData, loading, setLoading } = useKSHLData(
     dateFilter,
     selectedSurveyKey,
+    finalUnit,
+    finalUnitType,
+    isFilterLoading
   );
   const {
     dataNgoaiTru,
