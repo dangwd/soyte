@@ -1,71 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/prime";
-
-const HOSPITALS = [
-  {
-    id: 1,
-    name: "BV Đa khoa Xanh Pôn",
-    logo: "https://bvxanhpon.vn/storage/userfiles/images/logoxp.png",
-  },
-  {
-    id: 2,
-    name: "BV Thanh Nhàn",
-    logo: "https://bizweb.dktcdn.net/100/496/664/themes/929372/assets/logo.png?1762397676564",
-  },
-  {
-    id: 3,
-    name: "BV Phụ sản Hà Nội",
-    logo: "https://static.benhvienphusanhanoi.vn/images/common/logo.png",
-  },
-  {
-    id: 4,
-    name: "BV Tim Hà Nội",
-    logo: "http://benhvientimhanoi.vn/assets/img/bvtim_logo.png",
-  },
-  {
-    id: 5,
-    name: "BV Ung bướu Hà Nội",
-    logo: "https://cdn.benhvienungbuouhanoi.vn/media/logo/logo-bvub-photoroom.webp",
-  },
-  {
-    id: 6,
-    name: "BV Đa khoa Đức Giang",
-    logo: "https://benhvienducgiang.com/Images/companies/benhvienducgiang/banner/logo.jfif",
-  },
-  {
-    id: 7,
-    name: "BV Đa khoa Hà Đông",
-    logo: "	https://benhvienhadong.vn/public/images/uploads/logo/logo",
-  },
-  {
-    id: 8,
-    name: "BV Đa khoa Đống Đa",
-    logo: "https://benhviendongda.vn/wp-content/uploads/2017/07/Logo-BVDKDD-01.png",
-  },
-  {
-    id: 9,
-    name: "BV Da liễu Hà Nội",
-    logo: "https://dalieuhanoi.com/wp-content/uploads/2025/03/logo-3.jpg",
-  },
-  {
-    id: 10,
-    name: "BV Mắt Hà Nội",
-    logo: "https://benhvienmathanoi.gov.vn/wp-content/uploads/2021/03/logo-bệnh-viên-.png",
-  },
-  {
-    id: 11,
-    name: "BV Thận Hà Nội",
-    logo: "https://bvthanhanoi.vn/wp-content/themes/hifi/images/logo.png",
-  },
-  {
-    id: 12,
-    name: "BV Tâm thần Hà Nội",
-    logo: "https://benhvientamthanhanoi.com/wp-content/uploads/2021/11/25352161_1624254280971852_7764895047107135525_o.jpg",
-  },
-];
+import {
+  affiliatedFacilitiesService,
+  type AffiliatedFacility,
+} from "../services/affiliatedFacilitiesService";
 
 const HospitalSlider = () => {
+  const [hospitals, setHospitals] = useState<AffiliatedFacility[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const itemsToShow = { desktop: 4, tablet: 3, mobile: 2 };
@@ -78,6 +20,31 @@ const HospitalSlider = () => {
   };
 
   const [visibleCount, setVisibleCount] = useState(4);
+  const maxStartIndex = Math.max(hospitals.length - visibleCount, 0);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchHospitals = async () => {
+      try {
+        const data = await affiliatedFacilitiesService.getAll();
+        if (mounted) {
+          setHospitals(data);
+        }
+      } catch (error) {
+        console.error("Error fetching affiliated facilities:", error);
+        if (mounted) {
+          setHospitals([]);
+        }
+      }
+    };
+
+    fetchHospitals();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setVisibleCount(getVisibleItems());
@@ -87,18 +54,28 @@ const HospitalSlider = () => {
   }, []);
 
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % HOSPITALS.length);
-  }, []);
+    if (hospitals.length <= visibleCount) return;
+    setCurrentIndex((prev) => (prev >= maxStartIndex ? 0 : prev + 1));
+  }, [hospitals.length, maxStartIndex, visibleCount]);
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + HOSPITALS.length) % HOSPITALS.length);
+    if (hospitals.length <= visibleCount) return;
+    setCurrentIndex((prev) => (prev <= 0 ? maxStartIndex : prev - 1));
   };
 
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || hospitals.length <= visibleCount) return;
     const interval = setInterval(nextSlide, 3000);
     return () => clearInterval(interval);
-  }, [isPaused, nextSlide]);
+  }, [hospitals.length, isPaused, nextSlide, visibleCount]);
+
+  useEffect(() => {
+    setCurrentIndex((prev) => Math.min(prev, maxStartIndex));
+  }, [maxStartIndex]);
+
+  if (hospitals.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-12 bg-gray-50 border-t border-gray-100">
@@ -141,7 +118,7 @@ const HospitalSlider = () => {
               transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
             }}
           >
-            {HOSPITALS.map((hospital) => (
+            {hospitals.map((hospital) => (
               <div
                 key={hospital.id}
                 className="flex-shrink-0 px-2"

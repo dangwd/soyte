@@ -5,6 +5,7 @@ import {
   NotebookText,
   MessageSquare,
   Building2,
+  Hospital,
   Stethoscope,
   ShieldCheck,
   Lock,
@@ -62,6 +63,13 @@ export const adminMenu: MenuItem[] = [
     icon: Building2,
     permission: "social_facilities",
     to: "/admin/social-facilities",
+  },
+  {
+    key: "affiliated-facilities",
+    label: "Y tế trực thuộc",
+    icon: Hospital,
+    permission: "affiliated_facility",
+    to: "/admin/affiliated-facilities",
   },
   {
     key: "Medicalreflection",

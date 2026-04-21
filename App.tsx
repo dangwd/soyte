@@ -27,6 +27,7 @@ import FeedbacksManagement from "./pages/FeedbacksManagement";
 import SurveysManagement from "./pages/SurveysManagement";
 import AdminRoute from "./components/AdminRoute";
 import SocialFacilitiesManagement from "./pages/SocialFacilitiesManagement";
+import AffiliatedFacilitiesManagement from "./pages/AffiliatedFacilitiesManagement";
 import PermissionsManagement from "./pages/PermissionsManagement";
 import Report_DCBC from "./pages/report/Report_DCBC";
 import Report_KSHL from "./pages/report/Report_KSHL";
@@ -100,6 +101,10 @@ const App = () => {
           <Route
             path="social-facilities"
             element={<SocialFacilitiesManagement />}
+          />{" "}
+          <Route
+            path="affiliated-facilities"
+            element={<AffiliatedFacilitiesManagement />}
           />{" "}
           <Route path="permissions" element={<PermissionsManagement />} />{" "}
           <Route path="report/DCBC" element={<Report_DCBC />} />
