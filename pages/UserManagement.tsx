@@ -11,7 +11,7 @@ import {
   Shield,
   Edit3,
   Trash2,
-  Mail,
+  MailPlus,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -405,13 +405,11 @@ const UserManagement: React.FC = () => {
                           disabled={Number(user.status) !== 1}
                         />
                         )}
-                        {Number(user.status) === 0 && user.is_verified === false && (
+                        {user.is_verified === false && (
                           <Button
-                            icon={<Mail size={18} />}
-                            text
+                            icon={<MailPlus size={16} />}
                             rounded
-                            severity="info"
-                            className="w-8 h-8"
+                            className="w-9 h-9 !bg-sky-50 hover:!bg-sky-100 !text-sky-700 !border !border-sky-200 shadow-sm"
                             tooltip="Gửi lại mail xác thực"
                             tooltipOptions={{ position: 'top' }}
                             onClick={() => handleResendEmail(user)}

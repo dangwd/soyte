@@ -202,7 +202,7 @@ export const api = {
   },
 
   async resendVerification(email: string) {
-    return this.post("/auth/resend-confirmation", { email });
+    return this.post("/auth/resend-verification", { email });
   },
 
   async requestVerificationEmail(email: string) {
