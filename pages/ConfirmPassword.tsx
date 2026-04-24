@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, ArrowLeft, AlertCircle, CheckCircle2, Lock, XCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, AlertCircle, CheckCircle2, Lock, XCircle, Loader2, Mail, Send } from "lucide-react";
 import { Button } from "@/components/prime";
 import { api } from "../api";
 import { Toast } from "primereact/toast";
@@ -20,6 +20,10 @@ const ConfirmPassword: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendError, setResendError] = useState("");
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const toast = useRef<Toast>(null);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -69,6 +73,21 @@ const ConfirmPassword: React.FC = () => {
   const validation = validatePassword(password);
   const passwordsMatch = password && password === confirmPassword;
 
+  const validateResendEmail = () => {
+    const trimmedEmail = resendEmail.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!trimmedEmail) {
+      return "Vui lòng nhập email tài khoản.";
+    }
+
+    if (!emailRegex.test(trimmedEmail)) {
+      return "Email không đúng định dạng.";
+    }
+
+    return "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validation.isValid) return;
@@ -113,6 +132,42 @@ const ConfirmPassword: React.FC = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const validationMessage = validateResendEmail();
+
+    setResendError("");
+    setResendSuccess(false);
+
+    if (validationMessage) {
+      setResendError(validationMessage);
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      await api.requestVerificationEmail(resendEmail.trim());
+      setResendSuccess(true);
+      setResendEmail("");
+    } catch (err: any) {
+      console.error("Resend verification failed:", err);
+      setResendError(
+        err.message && !err.message.includes("API Error")
+          ? err.message
+          : "Không thể gửi yêu cầu cấp lại mail xác thực. Vui lòng thử lại.",
+      );
+      if (err.message && err.message.includes("API Error")) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Gửi yêu cầu cấp lại mail xác thực thất bại",
+        });
+      }
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -175,11 +230,70 @@ const ConfirmPassword: React.FC = () => {
                   <p className="text-gray-500 text-sm leading-relaxed mb-4">
                     {error || "Liên kết xác thực của bạn không hợp lệ hoặc đã hết hạn sử dụng."}
                   </p>
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
-                    <p className="text-gray-600 text-[11px] font-black uppercase tracking-widest">
-                      Liên hệ quản trị viên để được cấp lại mail xác thực
-                    </p>
-                  </div>
+                  <form
+                    onSubmit={handleResendVerification}
+                    className="text-left p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-4"
+                  >
+                    <div className="text-center">
+                      <p className="text-gray-700 text-[11px] font-black uppercase tracking-widest">
+                        Yêu cầu cấp lại mail xác thực
+                      </p>
+                      <p className="text-gray-500 text-xs mt-2 leading-relaxed">
+                        Nhập email tài khoản của bạn để gửi yêu cầu cấp lại mail xác thực.
+                      </p>
+                    </div>
+
+                    {resendSuccess && (
+                      <div className="bg-green-50 border border-green-100 p-4 rounded-xl text-green-700 text-sm flex items-start gap-3">
+                        <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
+                        <span>Yêu cầu đã được gửi. Vui lòng kiểm tra email của bạn.</span>
+                      </div>
+                    )}
+
+                    {resendError && (
+                      <div className="bg-red-50 border border-red-100 p-4 rounded-xl text-red-700 text-sm flex items-start gap-3">
+                        <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                        <span>{resendError}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-2">
+                        Email tài khoản
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          value={resendEmail}
+                          onChange={(e) => {
+                            setResendEmail(e.target.value);
+                            if (resendError) setResendError("");
+                            if (resendSuccess) setResendSuccess(false);
+                          }}
+                          className={`w-full pl-12 pr-4 py-4 bg-white border ${resendError ? "border-red-300" : "border-gray-200"} rounded-2xl outline-none focus:ring-4 focus:ring-primary-100 focus:bg-white transition-all text-sm font-bold`}
+                          placeholder="example@gmail.com"
+                        />
+                        <Mail
+                          size={18}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={isResending}
+                      loading={isResending}
+                      className="w-full px-6 py-4 !bg-[#0088cc] !text-white font-black rounded-2xl shadow-xl shadow-primary-100 hover:!bg-[#0077bb] transition-all transform hover:-translate-y-0.5"
+                    >
+                      {!isResending && (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Send size={16} />
+                          YÊU CẦU CẤP LẠI MAIL XÁC THỰC
+                        </span>
+                      )}
+                    </Button>
+                  </form>
                 </div>
               </div>
             ) : (

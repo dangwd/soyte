@@ -6,6 +6,18 @@ export type AffiliatedFacility = {
   logo: string;
 };
 
+type AffiliatedFacilitiesMeta = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+type AffiliatedFacilitiesPagedResponse = {
+  items: AffiliatedFacility[];
+  meta: AffiliatedFacilitiesMeta;
+};
+
 const normalizeFacilities = (response: any): AffiliatedFacility[] => {
   const rawItems = Array.isArray(response)
     ? response
@@ -25,10 +37,50 @@ const normalizeFacilities = (response: any): AffiliatedFacility[] => {
     .filter((item: AffiliatedFacility) => item.id && item.name);
 };
 
+const normalizeMeta = (
+  response: any,
+  fallback: { page?: number; limit?: number; total?: number } = {},
+): AffiliatedFacilitiesMeta => {
+  const total = Number(response?.meta?.total ?? fallback.total ?? 0);
+  const limit = Number(response?.meta?.limit ?? fallback.limit ?? 10);
+  const page = Number(response?.meta?.page ?? fallback.page ?? 1);
+  const totalPages = Math.max(
+    1,
+    Number(
+      response?.meta?.totalPages ?? Math.ceil(total / (limit || 10)) ?? 1,
+    ),
+  );
+
+  return {
+    total,
+    page,
+    limit,
+    totalPages,
+  };
+};
+
 export const affiliatedFacilitiesService = {
   getAll: async () => {
-    const response = await api.get("/affiliated-facilities");
+    const response = await api.get("/affiliated-facilities", { page: 1, limit: 1000 });
     return normalizeFacilities(response);
+  },
+
+  getPaged: async (
+    page: number = 1,
+    limit: number = 10,
+    q?: string,
+  ): Promise<AffiliatedFacilitiesPagedResponse> => {
+    const response = await api.get("/affiliated-facilities", {
+      page,
+      limit,
+      q: q || undefined,
+    });
+    const items = normalizeFacilities(response);
+
+    return {
+      items,
+      meta: normalizeMeta(response, { page, limit, total: items.length }),
+    };
   },
 
   create: async (data: Pick<AffiliatedFacility, "name" | "logo">) => {

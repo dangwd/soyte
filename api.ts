@@ -205,6 +205,10 @@ export const api = {
     return this.post("/auth/resend-confirmation", { email });
   },
 
+  async requestVerificationEmail(email: string) {
+    return this.post("/resend-verification", { email });
+  },
+
   async changePassword(data: any) {
     return this.put("/auth/change-password", data);
   },

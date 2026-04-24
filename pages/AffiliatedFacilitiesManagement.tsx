@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Edit3,
   Image as ImageIcon,
   Loader2,
@@ -22,6 +24,10 @@ const AffiliatedFacilitiesManagement = () => {
   const [facilities, setFacilities] = useState<AffiliatedFacility[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 10 });
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState<AffiliatedFacility | null>(
     null,
@@ -31,8 +37,14 @@ const AffiliatedFacilitiesManagement = () => {
   const fetchFacilities = async () => {
     setLoading(true);
     try {
-      const data = await affiliatedFacilitiesService.getAll();
-      setFacilities(data);
+      const response = await affiliatedFacilitiesService.getPaged(
+        params.page,
+        params.limit,
+        debouncedSearchTerm,
+      );
+      setFacilities(response.items);
+      setTotalItems(response.meta.total);
+      setTotalPages(response.meta.totalPages);
     } catch (error) {
       console.error("Error fetching affiliated facilities:", error);
       toast.current?.show({
@@ -41,22 +53,49 @@ const AffiliatedFacilitiesManagement = () => {
         detail: "Không thể tải danh sách đơn vị trực thuộc",
       });
       setFacilities([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFacilities();
-  }, []);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
 
-  const filteredFacilities = useMemo(() => {
-    const keyword = searchTerm.trim().toLowerCase();
-    if (!keyword) return facilities;
-    return facilities.filter((item) =>
-      item.name.toLowerCase().includes(keyword),
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchFacilities();
+  }, [params.page, params.limit, debouncedSearchTerm]);
+
+  const currentRange = useMemo(() => {
+    if (totalItems === 0 || facilities.length === 0) {
+      return { from: 0, to: 0 };
+    }
+
+    const from = (params.page - 1) * params.limit + 1;
+    const to = from + facilities.length - 1;
+    return { from, to };
+  }, [facilities.length, params.limit, params.page, totalItems]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setParams((current) =>
+      current.page === 1 ? current : { ...current, page: 1 },
     );
-  }, [facilities, searchTerm]);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setParams((current) => ({ ...current, page: newPage }));
+    }
+  };
 
   const handleDelete = async (id: number | string) => {
     confirmDialog({
@@ -72,7 +111,15 @@ const AffiliatedFacilitiesManagement = () => {
       accept: async () => {
         try {
           await affiliatedFacilitiesService.delete(id);
-          fetchFacilities();
+          setParams((current) => {
+            if (current.page > 1 && facilities.length === 1) {
+              return { ...current, page: current.page - 1 };
+            }
+            return current;
+          });
+          if (!(params.page > 1 && facilities.length === 1)) {
+            fetchFacilities();
+          }
         } catch (error: any) {
           console.error("Delete affiliated facility error:", error);
           if (error.message && error.message.includes("API Error")) {
@@ -101,7 +148,7 @@ const AffiliatedFacilitiesManagement = () => {
               Tổng đơn vị trực thuộc
             </p>
             <h3 className="text-2xl font-black text-gray-800">
-              {facilities.length}
+              {totalItems}
             </h3>
           </div>
         </div>
@@ -127,7 +174,7 @@ const AffiliatedFacilitiesManagement = () => {
               type="text"
               placeholder="Tìm kiếm đơn vị..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-100 font-medium text-sm"
             />
           </div>
@@ -155,14 +202,16 @@ const AffiliatedFacilitiesManagement = () => {
                     </p>
                   </td>
                 </tr>
-              ) : filteredFacilities.length === 0 ? (
+              ) : facilities.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-20 text-center text-gray-400">
-                    Không tìm thấy đơn vị trực thuộc nào.
+                    {debouncedSearchTerm
+                      ? "Không tìm thấy đơn vị trực thuộc nào."
+                      : "Chưa có đơn vị trực thuộc nào."}
                   </td>
                 </tr>
               ) : (
-                filteredFacilities.map((item) => (
+                facilities.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <h4 className="font-bold text-gray-800 text-sm">
@@ -209,9 +258,35 @@ const AffiliatedFacilitiesManagement = () => {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/30 text-sm text-gray-600">
-          Hiển thị <span className="font-bold">{filteredFacilities.length}</span>{" "}
-          trên <span className="font-bold">{facilities.length}</span> đơn vị
+        <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-3 md:flex-row md:justify-between md:items-center bg-gray-50/30">
+          <div className="text-sm text-gray-600">
+            Hiển thị <span className="font-bold">{currentRange.from}</span>
+            {" - "}
+            <span className="font-bold">{currentRange.to}</span> trên{" "}
+            <span className="font-bold">{totalItems}</span> đơn vị
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1 self-end md:self-auto">
+              <Button
+                onClick={() => handlePageChange(params.page - 1)}
+                disabled={params.page === 1}
+                icon={<ChevronLeft size={16} />}
+                label="Trước"
+                text
+              />
+              <div className="px-3 py-1 text-sm font-bold">
+                {params.page} / {totalPages}
+              </div>
+              <Button
+                onClick={() => handlePageChange(params.page + 1)}
+                disabled={params.page === totalPages}
+                icon={<ChevronRight size={16} />}
+                label="Sau"
+                iconPos="right"
+                text
+              />
+            </div>
+          )}
         </div>
       </div>
 
