@@ -11,7 +11,9 @@ import {
   Shield,
   Edit3,
   Trash2,
-  Mail,
+  MailPlus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Toast } from "primereact/toast";
 import { confirmDialog } from "primereact/confirmdialog";
@@ -23,6 +25,10 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 10 });
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const toast = useRef<Toast>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,12 +37,31 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/users");
-      const data = response.data || response;
-      setUsers(Array.isArray(data) ? data.map((u: any) => ({
-        ...u,
-        status: Number(u.status) as 0 | 1
-      })) : []);
+      const response = await api.get("/users", {
+        page: params.page,
+        limit: params.limit,
+        q: debouncedSearchTerm || undefined,
+      });
+      const data = response?.data || response;
+      const meta = response?.meta;
+      const normalizedUsers = Array.isArray(data)
+        ? data.map((u: any) => ({
+            ...u,
+            status: Number(u.status) as 0 | 1,
+          }))
+        : [];
+
+      setUsers(normalizedUsers);
+      setTotalUsers(Number(meta?.total ?? normalizedUsers.length));
+      setTotalPages(
+        Math.max(
+          1,
+          Number(
+            meta?.totalPages ??
+              Math.ceil(Number(meta?.total ?? normalizedUsers.length) / params.limit),
+          ),
+        ),
+      );
     } catch (err) {
       console.error(err);
       toast.current?.show({
@@ -44,14 +69,27 @@ const UserManagement: React.FC = () => {
         summary: "Lỗi",
         detail: "Không thể tải danh sách người dùng",
       });
+      setUsers([]);
+      setTotalUsers(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [params.page, params.limit, debouncedSearchTerm]);
 
   const handleDeactivate = async (userId: string | number) => {
     confirmDialog({
@@ -65,8 +103,8 @@ const UserManagement: React.FC = () => {
       accept: async () => {
         try {
           const res = await api.updateUser(userId, { status: 0 });
-          setUsers(
-            users?.map((u) =>
+          setUsers((currentUsers) =>
+            currentUsers?.map((u) =>
               u.id === userId ? { ...u, status: 0 as 0 | 1 } : u,
             ),
           );
@@ -124,23 +162,36 @@ const UserManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const filteredUsers = useMemo(
-    () =>
-      users.filter(
-        (user) =>
-          user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    [users, searchTerm],
-  );
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setParams((current) =>
+      current.page === 1 ? current : { ...current, page: 1 },
+    );
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setParams((current) => ({ ...current, page: newPage }));
+    }
+  };
+
+  const currentRange = useMemo(() => {
+    if (totalUsers === 0 || users.length === 0) {
+      return { from: 0, to: 0 };
+    }
+
+    const from = (params.page - 1) * params.limit + 1;
+    const to = from + users.length - 1;
+    return { from, to };
+  }, [params.page, params.limit, totalUsers, users.length]);
 
   const stats = useMemo(
     () => ({
-      total: users.length,
+      total: totalUsers,
       active: users.filter((u) => Number(u.status) === 1).length,
       admins: users.filter((u) => u.role === "admin").length,
     }),
-    [users],
+    [users, totalUsers],
   );
 
   return (
@@ -193,7 +244,7 @@ const UserManagement: React.FC = () => {
             <InputText
               placeholder="Tìm kiếm theo tên hoặc email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-100 font-medium text-sm"
             />
           </div>
@@ -224,7 +275,7 @@ const UserManagement: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
+                users.map((user) => (
                   <tr
                     key={user.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -354,13 +405,11 @@ const UserManagement: React.FC = () => {
                           disabled={Number(user.status) !== 1}
                         />
                         )}
-                        {Number(user.status) === 0 && user.is_verified === false && (
+                        {user.is_verified === false && (
                           <Button
-                            icon={<Mail size={18} />}
-                            text
+                            icon={<MailPlus size={16} />}
                             rounded
-                            severity="info"
-                            className="w-8 h-8"
+                            className="w-9 h-9 !bg-sky-50 hover:!bg-sky-100 !text-sky-700 !border !border-sky-200 shadow-sm"
                             tooltip="Gửi lại mail xác thực"
                             tooltipOptions={{ position: 'top' }}
                             onClick={() => handleResendEmail(user)}
@@ -373,16 +422,47 @@ const UserManagement: React.FC = () => {
               )}
             </tbody>
           </table>
-          {!loading && filteredUsers.length === 0 && (
+          {!loading && users.length === 0 && (
             <div className="py-20 text-center">
               <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                 <Users size={32} />
               </div>
               <p className="text-gray-400 font-bold">
-                {searchTerm
+                {debouncedSearchTerm
                   ? "Không tìm thấy người dùng nào phù hợp."
                   : "Không có người dùng nào trong hệ thống."}
               </p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+          <div className="text-sm text-gray-600">
+            Hiển thị <span className="font-bold">{currentRange.from}</span>
+            {" - "}
+            <span className="font-bold">{currentRange.to}</span> trên{" "}
+            <span className="font-bold">{totalUsers}</span> người dùng
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1 self-end md:self-auto">
+              <Button
+                onClick={() => handlePageChange(params.page - 1)}
+                disabled={params.page === 1}
+                icon={<ChevronLeft size={16} />}
+                label="Trước"
+                text
+              />
+              <div className="px-3 py-1 text-sm font-bold">
+                {params.page} / {totalPages}
+              </div>
+              <Button
+                onClick={() => handlePageChange(params.page + 1)}
+                disabled={params.page === totalPages}
+                icon={<ChevronRight size={16} />}
+                label="Sau"
+                iconPos="right"
+                text
+              />
             </div>
           )}
         </div>
