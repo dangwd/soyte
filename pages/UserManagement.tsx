@@ -205,7 +205,7 @@ const UserManagement: React.FC = () => {
         onSaveSuccess={fetchUsers}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Users}
           title="Tổng số người dùng"
@@ -227,7 +227,7 @@ const UserManagement: React.FC = () => {
         <div className="flex flex-col justify-center">
           <Button
             onClick={handleOpenAddModal}
-            className="w-full !bg-secondary-600 hover:!bg-secondary-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-secondary-100 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-[10px]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-secondary-100 transition-all transform hover:-translate-y-1 !bg-secondary-600 hover:!bg-secondary-700"
           >
             <Plus size={24} /> THÊM MỚI NGƯỜI DÙNG
           </Button>
@@ -235,7 +235,7 @@ const UserManagement: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="border-b border-gray-100 bg-gray-50/50 p-4 md:p-6">
           <div className="relative w-full">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -250,8 +250,145 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="divide-y divide-gray-100 md:hidden">
+          {loading ? (
+            <div className="px-6 py-16 text-center">
+              <Loader2
+                size={36}
+                className="mx-auto mb-4 animate-spin text-primary-600"
+              />
+              <p className="text-[10px] font-bold uppercase text-gray-400">
+                Đang tải dữ liệu người dùng...
+              </p>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 text-gray-300">
+                <Users size={32} />
+              </div>
+              <p className="font-bold text-gray-400">
+                {debouncedSearchTerm
+                  ? "Không tìm thấy người dùng nào phù hợp."
+                  : "Không có người dùng nào trong hệ thống."}
+              </p>
+            </div>
+          ) : (
+            users.map((user) => (
+              <div key={user.id} className="space-y-4 p-4">
+                <div>
+                  <div className="text-sm font-bold text-gray-800">
+                    {user.full_name}
+                  </div>
+                  <div className="text-xs text-gray-500">{user.email}</div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className={`rounded border px-2 py-1 text-[10px] font-black uppercase ${
+                      user.role === "admin"
+                        ? "border-amber-100 bg-amber-50 text-amber-700"
+                        : "border-gray-100 bg-gray-50 text-gray-600"
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
+                      Number(user.status) === 1
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        Number(user.status) === 1 ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    ></div>
+                    {Number(user.status) === 1 ? "Hoạt động" : "Vô hiệu hóa"}
+                  </span>
+                  {user.is_verified === false && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-black uppercase text-red-700">
+                      <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
+                      Chưa kích hoạt
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {(() => {
+                    const details = user.permission_details;
+                    const perms = user.permissions;
+
+                    let permList: string[] = [];
+
+                    if (Array.isArray(details) && details.length > 0) {
+                      permList = details.map((d: any) => d.description || d.name);
+                    } else if (!perms) {
+                      permList = [];
+                    } else if (Array.isArray(perms)) {
+                      permList = perms.map((p: any) =>
+                        typeof p === "object" ? p.description || p.name : p,
+                      );
+                    } else {
+                      permList = Object.keys(perms);
+                    }
+
+                    if (permList.length > 0) {
+                      return permList.slice(0, 3).map((perm, idx) => (
+                        <span
+                          key={idx}
+                          className="whitespace-nowrap rounded border border-primary-100 bg-primary-50 px-2 py-0.5 text-[9px] font-bold uppercase text-primary-700"
+                        >
+                          {perm}
+                        </span>
+                      ));
+                    }
+
+                    return (
+                      <span className="text-[10px] italic text-gray-400">
+                        Chưa phân quyền
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex items-center justify-end gap-1 border-t border-gray-100 pt-3">
+                  <Button
+                    icon={<Edit3 size={18} />}
+                    text
+                    rounded
+                    className="h-8 w-8"
+                    onClick={() => handleOpenEditModal(user)}
+                  />
+                  {Number(user.status) === 1 && user.is_verified === true && (
+                    <Button
+                      icon={<Trash2 size={18} />}
+                      text
+                      rounded
+                      severity="danger"
+                      className="h-8 w-8"
+                      onClick={() => handleDeactivate(user.id)}
+                      disabled={Number(user.status) !== 1}
+                    />
+                  )}
+                  {user.is_verified === false && (
+                    <Button
+                      icon={<MailPlus size={16} />}
+                      rounded
+                      className="h-9 w-9 !border !border-sky-200 !bg-sky-50 !text-sky-700 shadow-sm hover:!bg-sky-100"
+                      tooltip="Gửi lại mail xác thực"
+                      tooltipOptions={{ position: "top" }}
+                      onClick={() => handleResendEmail(user)}
+                    />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[1040px]">
             <thead>
               <tr className="bg-gray-50 text-left text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
                 <th className="px-6 py-4">Tên người dùng</th>
@@ -436,7 +573,7 @@ const UserManagement: React.FC = () => {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+        <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="text-sm text-gray-600">
             Hiển thị <span className="font-bold">{currentRange.from}</span>
             {" - "}
