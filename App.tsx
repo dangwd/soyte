@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import HealthRecordsDetail from "./pages/HealthRecordsDetail";
 import WorkSchedule from "./pages/WorkSchedule";
 import DataLookup from "./pages/DataLookup";
+import DigitalTransformation from "./pages/DigitalTransformation";
 import PolicyHealthInsurance from "./pages/PolicyHealthInsurance";
 import UserManagement from "./pages/UserManagement";
 import SmtpSettings from "./pages/SmtpSettings";
@@ -84,6 +85,10 @@ const App = () => {
         <Route path="/emergency" element={<EmergencyCenter />} />
         <Route path="/consulting" element={<HealthConsultation />} />
         <Route path="/data-lookup" element={<DataLookup />} />
+        <Route
+          path="/digital-transformation"
+          element={<DigitalTransformation />}
+        />
         {/* Public QR View */}
         <Route path="/templates/qr/:id" element={<TemplateQrView />} />
 

@@ -74,9 +74,9 @@ export const SERVICE_CATEGORIES = [
   },
   {
     id: 5,
-    title: "Khám bệnh - chữa bệnh",
-    path: "/news/examination",
-    icon: Stethoscope,
+    title: "CỔNG TRA CỨU THÔNG TIN",
+    path: "/data-lookup",
+    icon: Search,
     containerClass:
       "bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 border-cyan-200 hover:shadow-cyan-300",
     iconBoxClass: "bg-cyan-600 text-white shadow-cyan-400/50",
@@ -125,8 +125,8 @@ export const SERVICE_CATEGORIES = [
   {
     id: 10,
     title: "Chuyển đổi số",
-    path: "/data-lookup",
-    icon: Search,
+    path: "/digital-transformation",
+    icon: Laptop2,
     containerClass:
       "bg-gradient-to-br from-violet-50 via-violet-100 to-violet-50 border-violet-200 hover:shadow-violet-300",
     iconBoxClass: "bg-violet-600 text-white shadow-violet-400/50",
@@ -323,7 +323,7 @@ export const MAIN_MENU: MenuItem[] = [
   {
     id: "digital",
     title: "Chuyển đổi số",
-    path: "/data-lookup",
+    path: "/digital-transformation",
     icon: Laptop2,
   },
   {
