@@ -44,20 +44,20 @@ const LOOKUP_OPTIONS = [
   },
   {
     value: "practitioner",
-    label: "Người hành nghề y",
-    description: "Chứng chỉ, điều kiện và danh sách chuyên môn",
+    label: "Người hành nghề Y",
+    description: "Tra cứu chứng chỉ, điều kiện và danh sách chuyên môn",
     icon: UserRound,
   },
   {
     value: "facility",
-    label: "Cơ sở y tế",
-    description: "Danh sách cơ sở khám chữa bệnh, dược và xét nghiệm",
+    label: "Cơ sở khám chữa bệnh",
+    description: "Tra cứu danh sách bệnh viện, phòng khám và cơ sở khám chữa bệnh",
     icon: Stethoscope,
   },
   {
     value: "specialized",
-    label: "Dữ liệu chuyên ngành",
-    description: "Bộ dữ liệu công khai về dân số, ATTP và môi trường",
+    label: "Cơ sở thẩm mỹ",
+    description: "Tra cứu thông tin công khai theo nhóm cơ sở thẩm mỹ",
     icon: Database,
   },
 ] as const;
@@ -282,9 +282,9 @@ const TYPE_STYLES: Record<Exclude<LookupType, "all">, string> = {
 };
 
 const TYPE_LABELS: Record<Exclude<LookupType, "all">, string> = {
-  practitioner: "Người hành nghề y",
-  facility: "Cơ sở y tế",
-  specialized: "Dữ liệu chuyên ngành",
+  practitioner: "Người hành nghề Y",
+  facility: "Cơ sở khám chữa bệnh",
+  specialized: "Cơ sở thẩm mỹ",
 };
 
 const DataLookup = () => {
@@ -760,12 +760,12 @@ const DataLookup = () => {
                   gọn kết quả ngay.
                 </p>
                 <p>
-                  2. Với cơ sở y tế, nên tìm theo tên riêng hoặc lĩnh vực hoạt
-                  động để lọc nhanh hơn.
+                  2. Với nhóm cơ sở khám chữa bệnh, nên tìm theo tên riêng hoặc
+                  lĩnh vực hoạt động để lọc nhanh hơn.
                 </p>
                 <p>
-                  3. Dữ liệu chuyên ngành phù hợp khi cần tải danh mục tổng hợp
-                  thay vì tra cứu từng đơn vị.
+                  3. Nếu chưa rõ tên đơn vị, hãy nhập từ khóa ngắn theo chuyên
+                  môn hoặc nội dung cần tra cứu.
                 </p>
               </div>
             </div>
